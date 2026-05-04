@@ -17,7 +17,7 @@ export default function LoginPage() {
       ></div>
       
       <div className="relative bg-white pt-16 pb-12 px-10 rounded-[40px] w-[90%] max-w-[400px] text-center shadow-2xl">
-        <h1 className="text-5xl font-bold --primary mb-3">Durian</h1>
+        <h1 className="text-5xl font-bold text-green-600 mb-3">DurianFlow</h1>
         <p className="text-gray-500 font-light tracking-wide mb-12">Farm Management System</p>
         
         <form onSubmit={handleLogin} className="text-left flex flex-col gap-6">
