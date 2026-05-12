@@ -1,4 +1,6 @@
 "use client";
+import BottomNav from '../components/bottom_nav';
+import Library from '../library/page';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
@@ -172,26 +174,16 @@ export default function DashboardPage() {
              </button>
           </div>
         )}
+
+        {activeModule === 'library' && <Library />}
       </main>
 
       {/* Navigation */}
-      <nav className="fixed bottom-0 w-full h-[85px] bg-white flex justify-around items-center px-4 shadow-[0_-5px_15px_rgba(0,0,0,0.03)] z-50">
-        <button onClick={() => setActiveModule('records')} className={`flex flex-col items-center ${activeModule === 'records' ? 'text-green-600' : 'text-gray-300'}`}>
-          <ClipboardList size={24} className="mb-1" />
-          <span className="text-[10px] font-bold uppercase">Records</span>
-        </button>
-
-        <div className="relative -top-7">
-           <button onClick={() => setShowRecordModal(true)} className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center shadow-xl border-4 border-white active:scale-90 transition-transform">
-             <Plus size={32} strokeWidth={3} />
-           </button>
-        </div>
-
-        <button onClick={() => setActiveModule('yield')} className={`flex flex-col items-center ${activeModule === 'yield' ? 'text-green-600' : 'text-gray-300'}`}>
-          <ChartLine size={24} className="mb-1" />
-          <span className="text-[10px] font-bold uppercase">Yield AI</span>
-        </button>
-      </nav>
+      <BottomNav 
+         activeModule={activeModule} 
+         setActiveModule={setActiveModule} 
+         setShowRecordModal={setShowRecordModal} 
+      />
 
       {/* Activity Modal */}
       {showRecordModal && (

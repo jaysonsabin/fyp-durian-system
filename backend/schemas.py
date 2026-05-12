@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from models import UserRole
 from enum import Enum as PyEnum
 
@@ -67,3 +67,40 @@ class ActivityLogOut(BaseModel):
     remarks: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+# ==========================================
+# CONTENT INTERACTION SCHEMAS
+# ==========================================
+class InteractionCreate(BaseModel):
+    content_id: int
+    farmer_id: int
+    interaction_type: str # e.g., "downloaded" or "viewed"
+
+class InteractionOut(InteractionCreate):
+    interaction_id: int
+    interaction_date: datetime
+
+    class Config:
+        from_attributes = True
+
+# ==========================================
+# LIBRARY CONTENT SCHEMAS
+# ==========================================
+class LibraryContentCreate(BaseModel):
+    admin_id: int
+    title: str
+    type: str
+    category: str
+    description: Optional[str] = None
+    media_url: Optional[str] = None
+    published_by: str
+
+class LibraryContentOut(LibraryContentCreate):
+    content_id: int
+    date_published: datetime
+    
+    # This automatically nests the interactions when you fetch a book!
+    interactions: List[InteractionOut] = []
+
+    class Config:
+        from_attributes = True
