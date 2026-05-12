@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   // Initialize form state
   const [formData, setFormData] = useState({
-    farm_id: 4, 
+    farm_id: 5, 
     fertilizer_type: "NPK 15-15-15", 
     fertilizer_amount: "",
     temperature: "", 
@@ -110,7 +110,7 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-white px-6 py-4 flex justify-between items-center shadow-sm border-b">
+      <header className="bg-white px-6 py-4 flex justify-between items-center shadow-sm">
         <h2 className="text-xl font-bold text-gray-800 capitalize">{activeModule}</h2>
         <button onClick={() => router.push('/')} className="text-red-400 hover:text-red-600">
           <LogOut size={22} />
@@ -118,7 +118,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-5 pb-32">
+      <main className="flex-1 overflow-y-auto p-5 pb-32 bg-gray-100">
         {activeModule === 'records' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-lg font-bold text-gray-700">Farm Activity History</h3>
