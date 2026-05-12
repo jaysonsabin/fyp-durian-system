@@ -3,17 +3,75 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   LogOut, ClipboardList, Plus, ChartLine, Bot, 
-  X, Beaker, Thermometer, Droplets, PenLine, Save, Info 
+  X, Beaker, Thermometer, Droplets, Save, Info 
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [activeModule, setActiveModule] = useState('records');
   const [showRecordModal, setShowRecordModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added loading state
+
+  // Initialize form state
   const [formData, setFormData] = useState({
-    farm_id: 4, fertilizer_type: "NPK 15-15-15", fertilizer_amount: 0,
-    temperature: 0, rainfall: 0, soil_ph: 0, remarks: ""
+    farm_id: 4, 
+    fertilizer_type: "NPK 15-15-15", 
+    fertilizer_amount: "",
+    temperature: "", 
+    rainfall: "", 
+    soil_ph: "", 
+    remarks: ""
   });
+
+  // Handle generic input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // NEW: Function to send data to FastAPI
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent page reload
+    setIsSubmitting(true);
+
+    try {
+      // Make sure this URL matches your FastAPI endpoint!
+      const response = await fetch("http://localhost:8001/logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // Convert strings to numbers where necessary before sending
+        body: JSON.stringify({
+          ...formData,
+          fertilizer_amount: parseFloat(formData.fertilizer_amount),
+          temperature: parseFloat(formData.temperature),
+          rainfall: parseFloat(formData.rainfall),
+          soil_ph: parseFloat(formData.soil_ph)
+        }),
+      });
+
+      if (response.ok) {
+        const savedData = await response.json();
+        console.log("Successfully saved:", savedData);
+        
+        // Close modal and reset form
+        setShowRecordModal(false);
+        setFormData({ ...formData, fertilizer_amount: "", temperature: "", rainfall: "", soil_ph: "" });
+        
+        // Optional: You could trigger a re-fetch of the records here
+        alert("Activity saved successfully!"); 
+      } else {
+        console.error("Failed to save. Backend returned:", await response.text());
+        alert("Failed to save activity. Check console for details.");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Cannot connect to server. Is FastAPI running?");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -92,35 +150,82 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              <form className="flex flex-col gap-5">
+              {/* CONNECTED FORM */}
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div className="relative">
-                  <select className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-green-500">
-                    <option>NPK 15-15-15</option>
-                    <option>Organic</option>
+                  <select 
+                    name="fertilizer_type"
+                    value={formData.fertilizer_type}
+                    onChange={handleChange}
+                    className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="NPK 15-15-15">NPK 15-15-15</option>
+                    <option value="Organic">Organic</option>
                   </select>
                   <Beaker size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <input type="number" className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl outline-none" placeholder="Amt (kg)" />
-                  <input type="number" className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl outline-none" placeholder="Soil pH" />
+                  <input 
+                    type="number" 
+                    name="fertilizer_amount"
+                    value={formData.fertilizer_amount}
+                    onChange={handleChange}
+                    step="0.01"
+                    required
+                    className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl outline-none" 
+                    placeholder="Amt (kg)" 
+                  />
+                  <input 
+                    type="number" 
+                    name="soil_ph"
+                    value={formData.soil_ph}
+                    onChange={handleChange}
+                    step="0.1"
+                    required
+                    className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl outline-none" 
+                    placeholder="Soil pH" 
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-300">
                     <Thermometer size={18} className="text-orange-400" />
-                    <input type="number" className="bg-transparent outline-none w-full" placeholder="Temp" />
+                    <input 
+                      type="number" 
+                      name="temperature"
+                      value={formData.temperature}
+                      onChange={handleChange}
+                      step="0.1"
+                      required
+                      className="bg-transparent outline-none w-full" 
+                      placeholder="Temp °C" 
+                    />
                   </div>
                   <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-300">
                     <Droplets size={18} className="text-blue-400" />
-                    <input type="number" className="bg-transparent outline-none w-full" placeholder="Rain" />
+                    <input 
+                      type="number" 
+                      name="rainfall"
+                      value={formData.rainfall}
+                      onChange={handleChange}
+                      step="0.1"
+                      required
+                      className="bg-transparent outline-none w-full" 
+                      placeholder="Rain mm" 
+                    />
                   </div>
                 </div>
 
-                <button type="button" className="flex items-center justify-center gap-2 w-full bg-green-600 text-white py-5 rounded-[24px] font-extrabold shadow-xl hover:bg-green-700">
-                  <Save size={20} /> SAVE ACTIVITY
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className={`flex items-center justify-center gap-2 w-full text-white py-5 rounded-[24px] font-extrabold shadow-xl transition-all ${isSubmitting ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                >
+                  <Save size={20} /> 
+                  {isSubmitting ? "SAVING..." : "SAVE ACTIVITY"}
                 </button>
-             </form>
+              </form>
           </div>
         </div>
       )}

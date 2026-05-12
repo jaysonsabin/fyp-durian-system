@@ -48,8 +48,6 @@ class ActivityLog(Base):
 
     log_id = Column(Integer, primary_key=True, index=True)
     farm_id = Column(Integer, ForeignKey("farms.farm_id"), nullable=False)
-    
-    # Matching Jadual 3.21 exactly
     log_date = Column(DateTime, default=func.now(), nullable=False)
     fertilizer_type = Column(String(50), nullable=False)
     fertilizer_amount = Column(Float, nullable=False) # DOUBLE maps to Float
