@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   LogOut, ClipboardList, Plus, ChartLine, Bot, 
@@ -20,8 +20,38 @@ export default function DashboardPage() {
     temperature: "", 
     rainfall: "", 
     soil_ph: "", 
-    remarks: ""
+    remarks: "",
+    pest_control: "None",
   });
+
+  //State to hold the data from the database
+  const [logs, setLogs] = useState([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(true);
+
+  //Function to pull data from FastAPI
+  const fetchLogs = async () => {
+    try {
+      // FIX: Added /farms/ and dynamically inserted the farm_id from your state
+      const response = await fetch(`http://localhost:8001/farms/${formData.farm_id}/logs`); 
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLogs(data.reverse()); 
+      } else {
+        // PRO-TIP: This will print the actual FastAPI error to your console so you don't have to guess!
+        console.error("Failed to fetch logs. Status:", response.status);
+      }
+    } catch (error) {
+      console.error("Error connecting to server to fetch logs:", error);
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
+
+  // Trigger the fetch when the page first loads
+  useEffect(() => {
+    fetchLogs();
+  }, []);
 
   // Handle generic input changes
   const handleChange = (e) => {
@@ -58,6 +88,8 @@ export default function DashboardPage() {
         // Close modal and reset form
         setShowRecordModal(false);
         setFormData({ ...formData, fertilizer_amount: "", temperature: "", rainfall: "", soil_ph: "" });
+
+        fetchLogs();
         
         // Optional: You could trigger a re-fetch of the records here
         alert("Activity saved successfully!"); 
@@ -88,14 +120,42 @@ export default function DashboardPage() {
         {activeModule === 'records' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-lg font-bold text-gray-700">Farm Activity History</h3>
-            <div className="bg-white p-5 rounded-3xl shadow-sm border-l-[6px] border-green-500">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-[10px] font-bold text-gray-400">MAY 4, 2026</span>
-                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold">LATEST</span>
-              </div>
-              <p className="font-extrabold text-green-800 text-lg">Fertilization</p>
-              <p className="text-sm text-gray-600">Applied 5.5kg of NPK 15-15-15. Soil pH recorded at 6.8.</p>
-            </div>
+            
+            {isLoadingLogs ? (
+               <div className="text-center text-gray-400 py-10 font-bold animate-pulse">Loading records...</div>
+            ) : logs.length === 0 ? (
+               <div className="text-center text-gray-400 py-10 font-bold bg-gray-50 rounded-3xl border border-dashed border-gray-200">No activities recorded yet.</div>
+            ) : (
+               logs.map((log, index) => (
+                 <div key={log.id || index} className="bg-white p-5 rounded-3xl shadow-sm border-l-[6px] border-green-500 mb-4 transition-all hover:shadow-md">
+                   <div className="flex justify-between items-center mb-1">
+                     <span className="text-[10px] font-bold text-gray-400 uppercase">
+                       {/* Format the date nicely */}
+                       {new Date(log.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                     </span>
+                     {/* Only show the LATEST badge on the very first item */}
+                     {index === 0 && (
+                       <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold">LATEST</span>
+                     )}
+                   </div>
+                   <p className="font-extrabold text-green-800 text-lg">{log.fertilizer_type || "Activity"}</p>
+                   
+                   <div className="text-sm text-gray-600 mt-2 space-y-1">
+                     <p>Applied {log.fertilizer_amount}kg. Soil pH recorded at {log.soil_ph}.</p>
+                     
+                     {/* Conditionally render pest control if they used it */}
+                     {log.pest_control && log.pest_control !== "None" && (
+                       <p className="text-red-500 font-medium text-xs">Pest Treatment: {log.pest_control}</p>
+                     )}
+                     
+                     {/* Conditionally render remarks if they wrote any */}
+                     {log.remarks && (
+                       <p className="text-gray-500 italic border-l-2 border-gray-200 pl-2 mt-2 text-xs">"{log.remarks}"</p>
+                     )}
+                   </div>
+                 </div>
+               ))
+            )}
           </div>
         )}
 
@@ -215,6 +275,32 @@ export default function DashboardPage() {
                       placeholder="Rain mm" 
                     />
                   </div>
+                </div>
+
+                <div className="relative">
+                  <select 
+                    name="pest_control"
+                    value={formData.pest_control}
+                    onChange={handleChange}
+                    className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="None">No Pest Treatment</option>
+                    <option value="Fungicide (Canker)">Fungicide (Stem Canker)</option>
+                    <option value="Insecticide (Borers)">Insecticide (Seed Borers)</option>
+                    <option value="Organic (Neem)">Organic (Neem Oil)</option>
+                  </select>
+                  <Bot size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                </div>
+
+                <div>
+                  <textarea 
+                    name="remarks"
+                    value={formData.remarks}
+                    onChange={handleChange}
+                    rows="3"
+                    placeholder="Additional observations (e.g., yellowing leaves, heavy winds)..."
+                    className="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  ></textarea>
                 </div>
 
                 <button 

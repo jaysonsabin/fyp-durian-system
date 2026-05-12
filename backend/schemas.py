@@ -63,5 +63,7 @@ class ActivityLogOut(BaseModel):
     temperature: float
     rainfall: float
     soil_ph: float
+    pest_control: Optional[str] = "None"
+    remarks: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
