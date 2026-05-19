@@ -1,16 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 
-# Import your database and models
-import models, schemas, database
+# Import your database, models, schemas, and the new security file!
+import models, schemas, database, security
 from database import engine
 
 # ==========================================
 # 1. INITIALIZATION & DATABASE SYNC
 # ==========================================
-# THIS IS THE MAGIC LINE: It tells PostgreSQL to build your new tables!
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Durian Farm Management System")
@@ -34,13 +33,23 @@ def root():
     return {"message": "Durian Farm API is officially online!"}
 
 # ==========================================
-# 4. EXISTING ENDPOINTS (Farmers, Farms, Logs)
+# 4. AUTHENTICATION (Register & Login)
 # ==========================================
 @app.post("/register/farmer", response_model=schemas.UserOut)
 def register_farmer(farmer_data: schemas.FarmerCreate, db: Session = Depends(database.get_db)):
+    # 1. Check if username already exists to prevent duplicates
+    existing_user = db.query(models.User).filter(models.User.username == farmer_data.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+
+    # 2. Hash the password before saving
+    hashed_pwd = security.get_password_hash(farmer_data.password)
+
+    # 3. Create the farmer with the hashed password
     new_farmer = models.Farmer(
         full_name=farmer_data.full_name,
-        password_hash=farmer_data.password, 
+        username=farmer_data.username, # Make sure this is in your models.py!
+        password_hash=hashed_pwd, 
         role=farmer_data.role,
         address=farmer_data.address
     )
@@ -49,6 +58,30 @@ def register_farmer(farmer_data: schemas.FarmerCreate, db: Session = Depends(dat
     db.refresh(new_farmer)
     return new_farmer
 
+@app.post("/login")
+def login(credentials: schemas.UserLogin, db: Session = Depends(database.get_db)):
+    # 1. Find the user by username
+    user = db.query(models.User).filter(models.User.username == credentials.username).first()
+    
+    # 2. Verify user exists AND password matches
+    if not user or not security.verify_password(credentials.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password"
+        )
+    
+    # 3. Generate the JWT containing their ID and Role
+    access_token = security.create_access_token(
+        data={"sub": str(user.user_id), "role": user.role, "type": user.user_type}
+    )
+    
+    # Return the token to the Next.js frontend
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+# ==========================================
+# 5. EXISTING ENDPOINTS (Farms & Logs)
+# ==========================================
 @app.post("/farms", response_model=schemas.FarmOut)
 def create_farm(farm_data: schemas.FarmCreate, db: Session = Depends(database.get_db)):
     new_farm = models.Farm(
@@ -80,13 +113,10 @@ def get_farm_logs(farm_id: int, db: Session = Depends(database.get_db)):
 
 
 # ==========================================
-# 5. NEW ENDPOINTS: ELIBRARY
+# 6. ELIBRARY ENDPOINTS
 # ==========================================
-
-# A. UPLOAD A NEW RESOURCE (Admin Action)
 @app.post("/library", response_model=schemas.LibraryContentOut)
 def create_library_content(content: schemas.LibraryContentCreate, db: Session = Depends(database.get_db)):
-    # Verify the admin exists first
     admin = db.query(models.Admin).filter(models.Admin.user_id == content.admin_id).first()
     if not admin:
         raise HTTPException(status_code=404, detail="Admin not found")
@@ -97,27 +127,20 @@ def create_library_content(content: schemas.LibraryContentCreate, db: Session = 
     db.refresh(new_content)
     return new_content
 
-# B. GET ALL RESOURCES (Farmer Action)
 @app.get("/library", response_model=List[schemas.LibraryContentOut])
 def get_all_content(db: Session = Depends(database.get_db)):
-    # This automatically pulls the interactions too, thanks to your relationships!
     return db.query(models.LibraryContent).order_by(models.LibraryContent.date_published.desc()).all()
 
 
 # ==========================================
-# 6. NEW ENDPOINTS: CONTENT INTERACTIONS
+# 7. CONTENT INTERACTIONS
 # ==========================================
-
-# A. RECORD AN INTERACTION (When a farmer clicks/views a file)
 @app.post("/library/interaction", response_model=schemas.InteractionOut)
 def record_interaction(interaction: schemas.InteractionCreate, db: Session = Depends(database.get_db)):
-    
-    # 1. Verify Content exists
     content = db.query(models.LibraryContent).filter(models.LibraryContent.content_id == interaction.content_id).first()
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")
         
-    # 2. Verify Farmer exists
     farmer = db.query(models.Farmer).filter(models.Farmer.user_id == interaction.farmer_id).first()
     if not farmer:
          raise HTTPException(status_code=404, detail="Farmer not found")

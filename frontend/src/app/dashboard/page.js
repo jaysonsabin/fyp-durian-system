@@ -112,7 +112,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="bg-white px-6 py-4 flex justify-between items-center shadow-sm">
         <h2 className="text-xl font-bold text-gray-800 capitalize">{activeModule}</h2>
-        <button onClick={() => router.push('/')} className="text-red-400 hover:text-red-600">
+        <button onClick={() => router.push('/login')} className="text-red-400 hover:text-red-600">
           <LogOut size={22} />
         </button>
       </header>

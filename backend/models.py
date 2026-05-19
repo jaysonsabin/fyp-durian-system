@@ -23,6 +23,7 @@ class AdminPermission(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
+    username = Column(String(50), unique=True, index=True, nullable=False)
     user_id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String(150), nullable=False)
     password_hash = Column(String(255), nullable=False)

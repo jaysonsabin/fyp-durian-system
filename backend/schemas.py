@@ -4,9 +4,15 @@ from typing import Optional, List
 from models import UserRole
 from enum import Enum as PyEnum
 
+# NEW: Schema for when a user logs in
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
 # Data required to create a User
 class UserCreate(BaseModel):
     full_name: str
+    username: str
     password: str  # The raw password from the user
     role: UserRole
 
@@ -18,6 +24,7 @@ class FarmerCreate(UserCreate):
 class UserOut(BaseModel):
     user_id: int
     full_name: str
+    username: str
     role: UserRole
     created_at: datetime
 
