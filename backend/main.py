@@ -21,8 +21,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # ==========================================
@@ -33,22 +33,19 @@ def root():
     return {"message": "Durian Farm API is officially online!"}
 
 # ==========================================
-# 4. AUTHENTICATION (Register & Login)
+# 4. AUTHENTICATION & USER PROFILE MANAGEMENT
 # ==========================================
 @app.post("/register/farmer", response_model=schemas.UserOut)
 def register_farmer(farmer_data: schemas.FarmerCreate, db: Session = Depends(database.get_db)):
-    # 1. Check if username already exists to prevent duplicates
     existing_user = db.query(models.User).filter(models.User.username == farmer_data.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    # 2. Hash the password before saving
     hashed_pwd = security.get_password_hash(farmer_data.password)
 
-    # 3. Create the farmer with the hashed password
     new_farmer = models.Farmer(
         full_name=farmer_data.full_name,
-        username=farmer_data.username, # Make sure this is in your models.py!
+        username=farmer_data.username,
         password_hash=hashed_pwd, 
         role=farmer_data.role,
         address=farmer_data.address
@@ -60,27 +57,75 @@ def register_farmer(farmer_data: schemas.FarmerCreate, db: Session = Depends(dat
 
 @app.post("/login")
 def login(credentials: schemas.UserLogin, db: Session = Depends(database.get_db)):
-    # 1. Find the user by username
     user = db.query(models.User).filter(models.User.username == credentials.username).first()
     
-    # 2. Verify user exists AND password matches
     if not user or not security.verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
         )
     
-    # 3. Generate the JWT containing their ID and Role
     access_token = security.create_access_token(
-        data={"sub": str(user.user_id), "role": user.role, "type": user.user_type}
+        data={
+            "sub": user.username,       
+            "user_id": user.user_id,    
+            "role": user.role, 
+            "type": user.user_type
+        }
     )
     
-    # Return the token to the Next.js frontend
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": user.user_id 
+    }
+
+# FIXED: Moved out of login function scope and fixed indentation
+@app.get("/users/{user_id}/profile")
+def get_user_profile(
+    user_id: int, 
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(security.get_current_user)
+):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized access to profile data.")
+        
+    farmer = db.query(models.Farmer).filter(models.Farmer.user_id == user_id).first()
+    if not farmer:
+        raise HTTPException(status_code=404, detail="Farmer profile not found.")
+        
+    return {
+        "full_name": farmer.full_name,
+        "address": farmer.address
+    }
+
+# NEW: PUT endpoint to permanently save profile modifications to PostgreSQL
+@app.put("/users/{user_id}/profile")
+def update_user_profile(
+    user_id: int, 
+    profile_update: schemas.ProfileUpdate, 
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(security.get_current_user)
+):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized profile alteration.")
+        
+    farmer = db.query(models.Farmer).filter(models.Farmer.user_id == user_id).first()
+    if not farmer:
+        raise HTTPException(status_code=404, detail="Farmer record missing.")
+        
+    # Update the model attributes
+    farmer.full_name = profile_update.full_name
+    farmer.address = profile_update.address
+    
+    db.commit()
+    db.refresh(farmer)
+    
+    return {"status": "success", "message": "Profile updated successfully."}
 
 
 # ==========================================
-# 5. EXISTING ENDPOINTS (Farms & Logs)
+# 5. EXISTING ENDPOINTS (Farms & Logs) - SECURED
 # ==========================================
 @app.post("/farms", response_model=schemas.FarmOut)
 def create_farm(farm_data: schemas.FarmCreate, db: Session = Depends(database.get_db)):
@@ -100,7 +145,25 @@ def get_farmer_farms(farmer_id: int, db: Session = Depends(database.get_db)):
     return farms
 
 @app.post("/logs", response_model=schemas.ActivityLogOut)
-def create_activity_log(log_data: schemas.ActivityLogCreate, db: Session = Depends(database.get_db)):
+def create_activity_log(
+    log_data: schemas.ActivityLogCreate, 
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(security.get_current_user) # <-- Secure Lock
+):
+    # 1. Look up the targeted farm asset row in your database
+    target_farm = db.query(models.Farm).filter(models.Farm.farm_id == log_data.farm_id).first()
+    
+    if not target_farm:
+        raise HTTPException(status_code=404, detail="Target plantation asset not found.")
+
+    # 2. Relational Security Check: Verify that this farm belongs to the logged-in current_user
+    if target_farm.farmer_id != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Access Denied. You do not own this plantation partition."
+        )
+
+    # 3. If ownership is verified, cleanly map data fields and commit to table
     new_log = models.ActivityLog(**log_data.model_dump())
     db.add(new_log)
     db.commit()
@@ -108,8 +171,28 @@ def create_activity_log(log_data: schemas.ActivityLogCreate, db: Session = Depen
     return new_log
 
 @app.get("/farms/{farm_id}/logs", response_model=List[schemas.ActivityLogOut])
-def get_farm_logs(farm_id: int, db: Session = Depends(database.get_db)):
-    return db.query(models.ActivityLog).filter(models.ActivityLog.farm_id == farm_id).all()
+def get_farm_logs(
+    farm_id: int, 
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(security.get_current_user) # <-- Secure Lock
+):
+    # 1. Fetch the farm from the database to see who owns it
+    farm = db.query(models.Farm).filter(models.Farm.farm_id == farm_id).first()
+    
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm plantation partition not found.")
+
+    # 2. Relational Security Check: Does this farm actually belong to the logged-in current_user?
+    if farm.farmer_id != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Access denied. You do not have permission to view this farm's history matrices."
+        )
+
+    # 3. Secure clearance granted: Return the matching activity log table rows
+    return db.query(models.ActivityLog)\
+             .filter(models.ActivityLog.farm_id == farm_id)\
+             .all()
 
 
 # ==========================================

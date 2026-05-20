@@ -2,22 +2,21 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from './context/auth_context'; // 1. Import your global auth hook
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth(); // 2. Pull the global login action
   
-  // 1. Add state to hold the form data and UI status
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // 2. Handle typing in the inputs
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); // Clear error when user starts typing again
+    setError(''); 
   };
 
-  // 3. The real authentication function
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -35,19 +34,19 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         
-        // BOOM! Save the secure token to the browser's local storage
-        localStorage.setItem("durian_token", data.access_token);
+        // 3. Instead of setting localStorage manually and forcing a push,
+        // we let AuthContext manage the entire global application state session!
+        login(data.access_token, data.user_id); 
         
-        // Now we actually go to the dashboard
-        router.push('/dashboard'); 
       } else {
-        // If password/username is wrong, backend returns 401 Unauthorized
         setError("Invalid username or password.");
       }
     } catch (err) {
       console.error("Login error:", err);
       setError("Cannot connect to the server.");
     } finally {
+      // Note: We don't need to manually set isLoading to false if login succeeds,
+      // because AuthContext instantly moves us away to the dashboard page.
       setIsLoading(false);
     }
   };
@@ -63,7 +62,6 @@ export default function LoginPage() {
         <h1 className="text-5xl font-bold text-green-600 mb-3">DurianFlow</h1>
         <p className="text-gray-500 font-light tracking-wide mb-8">Farm Management System</p>
         
-        {/* NEW: Error Message Display */}
         {error && (
           <div className="mb-6 p-3 bg-red-50 text-red-500 text-sm rounded-xl font-medium border border-red-100">
             {error}

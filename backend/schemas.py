@@ -111,3 +111,8 @@ class LibraryContentOut(LibraryContentCreate):
 
     class Config:
         from_attributes = True
+        
+# Schema for handling profile update requests
+class ProfileUpdate(BaseModel):
+    full_name: str
+    address: str

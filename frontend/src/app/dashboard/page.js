@@ -1,22 +1,31 @@
 "use client";
 import BottomNav from '../components/bottom_nav';
 import Library from '../library/page';
+import { useAuth } from '../context/auth_context';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // <-- 1. IMPORT DETECTED
 import { 
   LogOut, ClipboardList, Plus, ChartLine, Bot, 
-  X, Beaker, Thermometer, Droplets, Save, Info 
-} from 'lucide-react';
+  X, Beaker, Thermometer, Droplets, Save, Info,
+  User, Settings, ChevronRight, MapPin
+} from 'lucide-react';  
 
 export default function DashboardPage() {
-  const router = useRouter();
+  const router = useRouter(); // <-- 2. ROUTER DEFINED FOR USE
+  const { user, logout, loading } = useAuth();
+  
   const [activeModule, setActiveModule] = useState('records');
   const [showRecordModal, setShowRecordModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Added loading state
+  const [isSubmitting, setIsSubmitting] = useState(false); 
+  const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
+  const [userFarms, setUserFarms] = useState([]);
+  const [isLoadingFarms, setIsLoadingFarms] = useState(true);
+  const [logs, setLogs] = useState([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [newFarmData, setNewFarmData] = useState({ farm_name: '', farm_location: '' });
 
-  // Initialize form state
   const [formData, setFormData] = useState({
-    farm_id: 5, 
+    farm_id: "", // Initialized empty so it can dynamic-bind to database row IDs
     fertilizer_type: "NPK 15-15-15", 
     fertilizer_amount: "",
     temperature: "", 
@@ -26,56 +35,117 @@ export default function DashboardPage() {
     pest_control: "None",
   });
 
-  //State to hold the data from the database
-  const [logs, setLogs] = useState([]);
-  const [isLoadingLogs, setIsLoadingLogs] = useState(true);
-
-  //Function to pull data from FastAPI
-  const fetchLogs = async () => {
+  // 1. Fetch all farms belonging to this user
+  const fetchFarms = async () => {
+    if (!user) return;
     try {
-      // FIX: Added /farms/ and dynamically inserted the farm_id from your state
-      const response = await fetch(`http://localhost:8001/farms/${formData.farm_id}/logs`); 
+      setIsLoadingFarms(true);
+      const response = await fetch(`http://localhost:8001/farms/${user.id}`, {
+        headers: { "Authorization": `Bearer ${user.token}` }
+      });
+      
+      if (response.ok) {
+        const farms = await response.json();
+        setUserFarms(farms);
+        
+        if (farms.length > 0) {
+          const activeFarmId = farms[0].farm_id;
+          setFormData(prev => ({ ...prev, farm_id: activeFarmId }));
+          fetchLogs(activeFarmId);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching farms:", error);
+    } finally {
+      setIsLoadingFarms(false);
+    }
+  };
+
+  // 2. Fetch logs for a specific farm_id
+  const fetchLogs = async (farmId) => {
+    try {
+      setIsLoadingLogs(true);
+      const response = await fetch(`http://localhost:8001/farms/${farmId}/logs`, {
+        headers: { "Authorization": `Bearer ${user.token}` }
+      }); 
       
       if (response.ok) {
         const data = await response.json();
         setLogs(data.reverse()); 
-      } else {
-        // PRO-TIP: This will print the actual FastAPI error to your console so you don't have to guess!
-        console.error("Failed to fetch logs. Status:", response.status);
       }
     } catch (error) {
-      console.error("Error connecting to server to fetch logs:", error);
+      console.error("Error fetching logs:", error);
     } finally {
       setIsLoadingLogs(false);
     }
   };
 
-  // Trigger the fetch when the page first loads
+  // 3. ALL EFFECT HOOKS RUN NEXT
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    if (!loading && !user) {
+      router.push('/'); 
+    }
+  }, [user, loading, router]);
 
-  // Handle generic input changes
+  useEffect(() => {
+    if (user) {
+      fetchFarms();
+    }
+  }, [user]);
+
+  // ==========================================
+  // 4. EVENT HANDLERS
+  // ==========================================
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // NEW: Function to send data to FastAPI
+  // FIXED: Extracted cleanly from inside handleSubmit so it scope-resolves properly
+  const handleCreateFarmLockScreen = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("http://localhost:8001/farms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          farm_name: newFarmData.farm_name,
+          farm_location: newFarmData.farm_location,
+          farmer_id: parseInt(user.id)
+        }),
+      });
+
+      if (response.ok) {
+        setNewFarmData({ farm_name: '', farm_location: '' });
+        fetchFarms(); 
+      } else {
+        alert("Failed to create farm partition.");
+      }
+    } catch (error) {
+      console.error("Network error creating farm:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault(); 
     setIsSubmitting(true);
 
     try {
-      // Make sure this URL matches your FastAPI endpoint!
       const response = await fetch("http://localhost:8001/logs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}` 
         },
-        // Convert strings to numbers where necessary before sending
         body: JSON.stringify({
           ...formData,
+          farm_id: parseInt(formData.farm_id), // FIXED: Uses actual farm relational key instead of user context key!
           fertilizer_amount: parseFloat(formData.fertilizer_amount),
           temperature: parseFloat(formData.temperature),
           rainfall: parseFloat(formData.rainfall),
@@ -84,19 +154,11 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
-        const savedData = await response.json();
-        console.log("Successfully saved:", savedData);
-        
-        // Close modal and reset form
         setShowRecordModal(false);
         setFormData({ ...formData, fertilizer_amount: "", temperature: "", rainfall: "", soil_ph: "" });
-
-        fetchLogs();
-        
-        // Optional: You could trigger a re-fetch of the records here
+        fetchLogs(formData.farm_id); // Refresh active lists
         alert("Activity saved successfully!"); 
       } else {
-        console.error("Failed to save. Backend returned:", await response.text());
         alert("Failed to save activity. Check console for details.");
       }
     } catch (error) {
@@ -107,15 +169,118 @@ export default function DashboardPage() {
     }
   };
 
+  // 5. THE EARLY RETURN SAFEGUARD
+  if (loading || !user) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-green-500 font-bold">
+        Loading DurianFlow Secure Environment...
+      </div>
+    );
+  }
+
+  // Mandatory Farm Creation Lock Screen Interceptor (Triggers if loading finishes and user owns 0 properties)
+  if (!isLoadingFarms && userFarms.length === 0) {
+    return (
+      <div className="h-screen w-screen flex flex-col justify-center items-center bg-gray-900 p-6 relative overflow-hidden">
+        <div className="bg-white p-8 rounded-[32px] w-full max-w-md shadow-2xl relative z-10 text-center">
+          <MapPin size={48} className="text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Welcome to DurianFlow!</h2>
+          <p className="text-gray-500 text-sm mb-8">Before you can track activities or predict yields, you need to register your first plantation location.</p>
+          
+          <form onSubmit={handleCreateFarmLockScreen} className="flex flex-col gap-4 text-left">
+            <input 
+              type="text" 
+              placeholder="Plantation Name (e.g., Raub Orchard)"
+              required
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+              value={newFarmData.farm_name}
+              onChange={(e) => setNewFarmData({ ...newFarmData, farm_name: e.target.value })}
+            />
+            <input 
+              type="text" 
+              placeholder="Location (e.g., Pahang, Malaysia)"
+              required
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+              value={newFarmData.farm_location}
+              onChange={(e) => setNewFarmData({ ...newFarmData, farm_location: e.target.value })}
+            />
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className={`w-full text-white py-4 mt-2 rounded-2xl font-bold shadow-lg transition-all ${isSubmitting ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+            >
+              {isSubmitting ? "INITIALIZING..." : "CREATE MY FIRST FARM"}
+            </button>
+          </form>
+          <button onClick={logout} className="mt-6 text-sm font-bold text-gray-400 hover:text-red-500 transition-colors">
+            Log Out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 6. FINAL RENDERING OF THE SECURE UI
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="bg-white px-6 py-4 flex justify-between items-center shadow-sm">
-        <h2 className="text-xl font-bold text-gray-800 capitalize">{activeModule}</h2>
-        <button onClick={() => router.push('/login')} className="text-red-400 hover:text-red-600">
-          <LogOut size={22} />
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 capitalize">{activeModule}</h2>
+          {userFarms.length > 0 && (
+            <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider">{userFarms[0].farm_name}</p>
+          )}
+        </div>
+        <button 
+          onClick={() => setIsProfilePanelOpen(true)} 
+          className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors"
+        >
+          <User size={20} />
         </button>
       </header>
+
+      {isProfilePanelOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex justify-end animate-in fade-in duration-200">
+          <div className="w-[80%] max-w-sm bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            
+            {/* Panel Header */}
+            <div className="p-6 flex justify-between items-center border-b border-gray-100">
+              <h3 className="font-bold text-lg text-gray-800">Account</h3>
+              <button onClick={() => setIsProfilePanelOpen(false)} className="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full">
+                <X size={18} />
+              </button>
+            </div>
+            
+            {/* Panel Links */}
+            <div className="p-4 flex-1 flex flex-col gap-2">
+              <button 
+                onClick={() => {
+                  setIsProfilePanelOpen(false);
+                  router.push('/profile');
+                }}
+                className="flex items-center justify-between w-full p-4 rounded-2xl hover:bg-gray-50 text-left transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-50 text-blue-500 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
+                    <Settings size={18} />
+                  </div>
+                  <span className="font-semibold text-gray-700">Edit Profile & Farms</span>
+                </div>
+                <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+              </button>
+            </div>
+
+            {/* Logout Button */}
+            <div className="p-6 border-t border-gray-100">
+              <button onClick={logout} className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-red-50 text-red-500 font-bold hover:bg-red-100 transition-colors">
+                <LogOut size={18} />
+                Sign Out
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-5 pb-32 bg-gray-100">
@@ -129,13 +294,11 @@ export default function DashboardPage() {
                <div className="text-center text-gray-400 py-10 font-bold bg-gray-50 rounded-3xl border border-dashed border-gray-200">No activities recorded yet.</div>
             ) : (
                logs.map((log, index) => (
-                 <div key={log.id || index} className="bg-white p-5 rounded-3xl shadow-sm border-l-[6px] border-green-500 mb-4 transition-all hover:shadow-md">
+                 <div key={log.log_id || index} className="bg-white p-5 rounded-3xl shadow-sm border-l-[6px] border-green-500 mb-4 transition-all hover:shadow-md">
                    <div className="flex justify-between items-center mb-1">
                      <span className="text-[10px] font-bold text-gray-400 uppercase">
-                       {/* Format the date nicely */}
                        {new Date(log.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                      </span>
-                     {/* Only show the LATEST badge on the very first item */}
                      {index === 0 && (
                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold">LATEST</span>
                      )}
@@ -144,13 +307,9 @@ export default function DashboardPage() {
                    
                    <div className="text-sm text-gray-600 mt-2 space-y-1">
                      <p>Applied {log.fertilizer_amount}kg. Soil pH recorded at {log.soil_ph}.</p>
-                     
-                     {/* Conditionally render pest control if they used it */}
                      {log.pest_control && log.pest_control !== "None" && (
                        <p className="text-red-500 font-medium text-xs">Pest Treatment: {log.pest_control}</p>
                      )}
-                     
-                     {/* Conditionally render remarks if they wrote any */}
                      {log.remarks && (
                        <p className="text-gray-500 italic border-l-2 border-gray-200 pl-2 mt-2 text-xs">"{log.remarks}"</p>
                      )}
@@ -178,7 +337,6 @@ export default function DashboardPage() {
         {activeModule === 'library' && <Library />}
       </main>
 
-      {/* Navigation */}
       <BottomNav 
          activeModule={activeModule} 
          setActiveModule={setActiveModule} 
@@ -194,7 +352,7 @@ export default function DashboardPage() {
                   <h3 className="text-2xl font-extrabold text-green-900">New Activity</h3>
                   <div className="flex items-center gap-1.5 text-gray-400 mt-0.5">
                     <Info size={12} className="text-green-500" />
-                    <p className="text-[10px] font-bold uppercase">Farm ID: {formData.farm_id}</p>
+                    <p className="text-[10px] font-bold uppercase">Farm Target: {userFarms[0]?.farm_name}</p>
                   </div>
                 </div>
                 <button onClick={() => setShowRecordModal(false)} className="w-10 h-10 bg-gray-100 rounded-full text-gray-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500">
@@ -202,7 +360,6 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              {/* CONNECTED FORM */}
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div className="relative">
                   <select 

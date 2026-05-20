@@ -44,7 +44,7 @@ export default function RegisterPage() {
         setStatus({ type: 'success', message: 'Registration successful! Redirecting to login...' });
         // Give them a second to read the success message before sending them to login
         setTimeout(() => {
-          router.push('/login');
+          router.push('/');
         }, 2000);
       } else {
         const errorData = await response.json();
