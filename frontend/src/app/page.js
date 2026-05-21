@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from './context/auth_context'; // 1. Import your global auth hook
+import { useAuth } from '@/app/context/auth_context'; // 1. Import your global auth hook
 
 export default function LoginPage() {
   const router = useRouter();

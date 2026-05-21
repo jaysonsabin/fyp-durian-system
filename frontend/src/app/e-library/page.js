@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BookOpen, FileText, Video, ExternalLink, Search, X } from "lucide-react";
-import { useAuth } from "../context/auth_context";
+import { BookOpen, FileText, Video, ExternalLink, Search, X, Heart, Bookmark, Download } from "lucide-react";
+import { useAuth } from "@/app/context/auth_context";
 
 import {
   fetchLibraryContents,
   logLibraryInteraction,
-} from "./services";
+  deleteLibraryInteraction,
+} from "@/services/library";
 
 export default function Library() {
   const [contents, setContents] = useState([]);
@@ -48,15 +49,157 @@ export default function Library() {
     // UX first
     window.open(content.media_url, "_blank");
 
-    const farmerId = user?.id || "guest";
+    if (!user) return;
 
     logLibraryInteraction({
       content_id: content.content_id,
-      farmer_id: farmerId,
+      farmer_id: user.id,
       interaction_type: "Viewed",
+    }).then((newInteraction) => {
+      setContents(prev => prev.map(item => {
+        if (item.content_id === content.content_id) {
+          return {
+            ...item,
+            interactions: [...(item.interactions || []), newInteraction]
+          };
+        }
+        return item;
+      }));
     }).catch((err) => {
       console.error("Interaction log failed:", err);
     });
+  };
+
+  const handleToggleLike = async (content, e) => {
+    e.stopPropagation();
+    if (!user) return;
+
+    const isLiked = content.interactions?.some(
+      (i) => i.interaction_type === "Liked" && i.farmer_id === user.id
+    );
+
+    try {
+      if (isLiked) {
+        await deleteLibraryInteraction({
+          content_id: content.content_id,
+          farmer_id: user.id,
+          interaction_type: "Liked"
+        });
+        setContents(prev => prev.map(item => {
+          if (item.content_id === content.content_id) {
+            return {
+              ...item,
+              interactions: (item.interactions || []).filter(
+                i => !(i.interaction_type === "Liked" && i.farmer_id === user.id)
+              )
+            };
+          }
+          return item;
+        }));
+      } else {
+        const newInteraction = await logLibraryInteraction({
+          content_id: content.content_id,
+          farmer_id: user.id,
+          interaction_type: "Liked"
+        });
+        setContents(prev => prev.map(item => {
+          if (item.content_id === content.content_id) {
+            return {
+              ...item,
+              interactions: [...(item.interactions || []), newInteraction]
+            };
+          }
+          return item;
+        }));
+      }
+    } catch (err) {
+      console.error("Like toggle failed:", err);
+    }
+  };
+
+  const handleToggleBookmark = async (content, e) => {
+    e.stopPropagation();
+    if (!user) return;
+
+    const isBookmarked = content.interactions?.some(
+      (i) => i.interaction_type === "Bookmarked" && i.farmer_id === user.id
+    );
+
+    try {
+      if (isBookmarked) {
+        await deleteLibraryInteraction({
+          content_id: content.content_id,
+          farmer_id: user.id,
+          interaction_type: "Bookmarked"
+        });
+        setContents(prev => prev.map(item => {
+          if (item.content_id === content.content_id) {
+            return {
+              ...item,
+              interactions: (item.interactions || []).filter(
+                i => !(i.interaction_type === "Bookmarked" && i.farmer_id === user.id)
+              )
+            };
+          }
+          return item;
+        }));
+      } else {
+        const newInteraction = await logLibraryInteraction({
+          content_id: content.content_id,
+          farmer_id: user.id,
+          interaction_type: "Bookmarked"
+        });
+        setContents(prev => prev.map(item => {
+          if (item.content_id === content.content_id) {
+            return {
+              ...item,
+              interactions: [...(item.interactions || []), newInteraction]
+            };
+          }
+          return item;
+        }));
+      }
+    } catch (err) {
+      console.error("Bookmark toggle failed:", err);
+    }
+  };
+
+  const handleDownload = async (content, e) => {
+    e.stopPropagation();
+    if (!content.media_url) {
+      alert("No file linked to this resource.");
+      return;
+    }
+
+    // Trigger download using link download attribute
+    const link = document.createElement("a");
+    link.href = content.media_url;
+    link.setAttribute("download", content.title || "resource");
+    link.setAttribute("target", "_blank");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (!user) return;
+
+    try {
+      const newInteraction = await logLibraryInteraction({
+        content_id: content.content_id,
+        farmer_id: user.id,
+        interaction_type: "Downloaded"
+      });
+      setContents(prev => prev.map(item => {
+        if (item.content_id === content.content_id) {
+          return {
+            ...item,
+            interactions: [...(item.interactions || []), newInteraction]
+          };
+        }
+        return item;
+      }));
+    } catch (err) {
+      console.error("Download log failed:", err);
+    }
   };
 
   const categories = ["All", ...new Set(contents.map((item) => item.category).filter(Boolean))];
@@ -143,6 +286,10 @@ export default function Library() {
             <LibraryCard
               key={item.content_id}
               item={item}
+              userId={user?.id}
+              onLike={(e) => handleToggleLike(item, e)}
+              onBookmark={(e) => handleToggleBookmark(item, e)}
+              onDownload={(e) => handleDownload(item, e)}
               onClick={handleResourceClick}
             />
           ))
@@ -168,7 +315,7 @@ function EmptyState({ isFiltering }) {
   );
 }
 
-function LibraryCard({ item, onClick }) {
+function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick }) {
   const isVideo = item.type?.toLowerCase() === "video";
 
   // Safeguard date parsing to ensure any invalid payload values don't crash rendering
@@ -179,6 +326,15 @@ function LibraryCard({ item, onClick }) {
       ? "Recent"
       : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
+
+  const interactions = item.interactions || [];
+  const likes = interactions.filter((i) => i.interaction_type === "Liked");
+  const bookmarks = interactions.filter((i) => i.interaction_type === "Bookmarked");
+  const downloads = interactions.filter((i) => i.interaction_type === "Downloaded");
+  const views = interactions.filter((i) => i.interaction_type === "Viewed");
+
+  const isLiked = likes.some((i) => i.farmer_id === userId);
+  const isBookmarked = bookmarks.some((i) => i.farmer_id === userId);
 
   return (
     <div
@@ -216,14 +372,52 @@ function LibraryCard({ item, onClick }) {
           </p>
         )}
 
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-md max-w-[150px] truncate">
-            By {item.published_by || "System"}
-          </span>
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50 flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-md max-w-[120px] truncate">
+              By {item.published_by || "System"}
+            </span>
 
-          <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 px-2 py-1 rounded-md">
-            {item.interactions?.length || 0} Views
-          </span>
+            <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 px-2 py-1 rounded-md">
+              {views.length} Views
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Like button */}
+            <button
+              onClick={onLike}
+              className={`flex items-center gap-1 p-1.5 rounded-lg transition-all transform active:scale-95 ${
+                isLiked 
+                  ? "text-red-500 bg-red-50" 
+                  : "text-gray-400 hover:text-red-500 hover:bg-red-50"
+              }`}
+            >
+              <Heart size={16} className={isLiked ? "fill-red-500 text-red-500" : ""} />
+              <span className="text-xs font-bold">{likes.length}</span>
+            </button>
+
+            {/* Bookmark button */}
+            <button
+              onClick={onBookmark}
+              className={`flex items-center p-1.5 rounded-lg transition-all transform active:scale-95 ${
+                isBookmarked 
+                  ? "text-green-600 bg-green-50" 
+                  : "text-gray-400 hover:text-green-600 hover:bg-green-50"
+              }`}
+            >
+              <Bookmark size={16} className={isBookmarked ? "fill-green-600 text-green-600" : ""} />
+            </button>
+
+            {/* Download button */}
+            <button
+              onClick={onDownload}
+              className="flex items-center gap-1 p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all transform active:scale-95"
+            >
+              <Download size={16} />
+              <span className="text-xs font-bold">{downloads.length}</span>
+            </button>
+          </div>
         </div>
       </div>
 

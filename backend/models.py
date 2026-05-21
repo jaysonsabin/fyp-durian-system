@@ -57,7 +57,7 @@ class Farm(Base):
     farm_name = Column(String(120), nullable=False)
     farm_location = Column(String(255), nullable=False)
     owner = relationship("Farmer", back_populates="farms")
-    logs = relationship("ActivityLog", back_populates="farm")
+    logs = relationship("ActivityLog", back_populates="farm", cascade="all, delete-orphan")
 
 class FertilizerBrand(enum.Enum):
     NPK_15_15_15 = "NPK 15-15-15"

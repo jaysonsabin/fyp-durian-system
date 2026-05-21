@@ -1,11 +1,12 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/auth_context';
+import { useAuth } from '@/app/context/auth_context';
 import { 
   ArrowLeft, User, MapPin, Save, Plus, 
-  Home, Sprout, ShieldCheck 
+  Home, Sprout, ShieldCheck, Edit2, Trash2, Check, X 
 } from 'lucide-react';
+import { updateFarm, deleteFarm } from '@/services/dashboard';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -29,6 +30,61 @@ export default function ProfilePage() {
     farm_name: "",
     farm_location: ""
   });
+
+  // Editing Farm State
+  const [editingFarmId, setEditingFarmId] = useState(null);
+  const [editFarmData, setEditFarmData] = useState({ farm_name: "", farm_location: "" });
+  const [isUpdatingFarm, setIsUpdatingFarm] = useState(false);
+
+  const handleStartEditFarm = (farm) => {
+    setEditingFarmId(farm.farm_id);
+    setEditFarmData({
+      farm_name: farm.farm_name,
+      farm_location: farm.farm_location
+    });
+  };
+
+  const handleCancelEditFarm = () => {
+    setEditingFarmId(null);
+    setEditFarmData({ farm_name: "", farm_location: "" });
+  };
+
+  const handleEditFarmChange = (e) => {
+    setEditFarmData({ ...editFarmData, [e.target.name]: e.target.value });
+  };
+
+  const handleSaveFarm = async (farmId) => {
+    if (!editFarmData.farm_name.trim() || !editFarmData.farm_location.trim()) {
+      alert("Farm name and location cannot be empty.");
+      return;
+    }
+    setIsUpdatingFarm(true);
+    try {
+      await updateFarm(farmId, editFarmData, user.token);
+      setEditingFarmId(null);
+      fetchFarms();
+      alert("Plantation updated successfully!");
+    } catch (error) {
+      console.error("Error updating farm:", error);
+      alert("Failed to update plantation details.");
+    } finally {
+      setIsUpdatingFarm(false);
+    }
+  };
+
+  const handleDeleteFarm = async (farmId) => {
+    const message = "WARNING: Deleting this plantation will permanently erase the farm and ALL associated activity records. This action cannot be undone.\n\nAre you sure you want to proceed?";
+    if (window.confirm(message)) {
+      try {
+        await deleteFarm(farmId, user.token);
+        fetchFarms();
+        alert("Plantation and all its records deleted successfully.");
+      } catch (error) {
+        console.error("Error deleting farm:", error);
+        alert("Failed to delete plantation.");
+      }
+    }
+  };
 
   // 1. Fetch Existing Farms
   const fetchFarms = async () => {
@@ -155,7 +211,7 @@ export default function ProfilePage() {
       {/* Header */}
       <header className="bg-white px-6 py-4 flex items-center gap-4 shadow-sm sticky top-0 z-20">
         <button 
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/activity-log')}
           className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -235,22 +291,91 @@ export default function ProfilePage() {
                 No plantations found. Add one below.
               </div>
             ) : (
-              farms.map((farm) => (
-                <div key={farm.farm_id} className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl hover:border-green-200 hover:bg-green-50/50 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
-                      <Home size={18} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800">{farm.farm_name}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                        <MapPin size={10} /> {farm.farm_location}
-                      </p>
+              farms.map((farm) => {
+                const isEditing = editingFarmId === farm.farm_id;
+                return (
+                  <div 
+                    key={farm.farm_id} 
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-2xl transition-all ${
+                      isEditing 
+                        ? 'border-green-500 bg-green-50/20' 
+                        : 'border-gray-100 hover:border-green-200 hover:bg-green-50/50'
+                    }`}
+                  >
+                    {isEditing ? (
+                      <div className="flex-1 flex flex-col sm:flex-row gap-3 mr-4">
+                        <input
+                          type="text"
+                          name="farm_name"
+                          value={editFarmData.farm_name}
+                          onChange={handleEditFarmChange}
+                          placeholder="Plantation Name"
+                          className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
+                        />
+                        <input
+                          type="text"
+                          name="farm_location"
+                          value={editFarmData.farm_location}
+                          onChange={handleEditFarmChange}
+                          placeholder="Location / Region"
+                          className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
+                          <Home size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">{farm.farm_name}</p>
+                          <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                            <MapPin size={10} /> {farm.farm_location}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2 mt-3 sm:mt-0 justify-end">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveFarm(farm.farm_id)}
+                            disabled={isUpdatingFarm}
+                            className="p-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+                            title="Save changes"
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            onClick={handleCancelEditFarm}
+                            className="p-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+                            title="Cancel"
+                          >
+                            <X size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleStartEditFarm(farm)}
+                            className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer"
+                            title="Edit Plantation"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFarm(farm.farm_id)}
+                            className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                            title="Delete Plantation"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <ShieldCheck size={20} className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

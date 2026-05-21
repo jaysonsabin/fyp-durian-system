@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("durian_token", token);
     localStorage.setItem("userId", userId);
     setUser({ id: userId, token: token });
-    router.push('/dashboard');
+    router.push('/activity-log');
   };
 
   // 3. Global Logout Function

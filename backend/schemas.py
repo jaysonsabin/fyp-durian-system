@@ -116,3 +116,16 @@ class LibraryContentOut(LibraryContentCreate):
 class ProfileUpdate(BaseModel):
     full_name: str
     address: str
+
+class FarmUpdate(BaseModel):
+    farm_name: str
+    farm_location: str
+
+class ActivityLogUpdate(BaseModel):
+    fertilizer_type: FertilizerEnum
+    fertilizer_amount: float
+    pest_control: Optional[str] = None
+    temperature: float
+    rainfall: float
+    soil_ph: float
+    remarks: Optional[str] = None
