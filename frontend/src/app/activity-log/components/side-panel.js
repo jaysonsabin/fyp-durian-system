@@ -1,17 +1,40 @@
+import { useEffect, useState } from 'react';
 import { X, Settings, ChevronRight, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function ProfilePanel({ isOpen, onClose, onLogout }) {
   const router = useRouter();
+  const [shouldRender, setShouldRender] = useState(isOpen);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+    } else {
+      // Delay unmounting by 300ms to allow the exit animation to finish
+      const timer = setTimeout(() => setShouldRender(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!shouldRender) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex justify-end animate-in fade-in duration-200">
-      {/* Click outside to close */}
-      <div className="absolute inset-0" onClick={onClose}></div>
+    <div className={`fixed inset-0 z-[300] flex justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+      
+      {/* Backdrop */}
+      <div 
+        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'animate-in fade-in' : 'animate-out fade-out'}`} 
+        onClick={onClose}
+      ></div>
 
-      <div className="w-[80%] max-w-sm bg-white h-full shadow-2xl flex flex-col relative z-10 animate-in slide-in-from-right duration-300">
+      {/* Main Drawer Panel */}
+      <div 
+        className={`w-[80%] max-w-sm bg-white h-full shadow-2xl flex flex-col relative z-10 duration-300 ease-in-out
+          ${isOpen 
+            ? 'animate-in slide-in-from-right' 
+            : 'animate-out slide-out-to-right'
+          }`}
+      >
         
         {/* Panel Header */}
         <div className="p-6 flex justify-between items-center border-b border-gray-100">

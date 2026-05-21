@@ -1,187 +1,235 @@
-import { useState } from 'react';
-import { Bot, Sparkles, Thermometer, Droplets, Beaker, Sprout, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bot, Sparkles, Thermometer, Droplets, Beaker, Sprout, Brain, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/app/context/auth_context';
+import { fetchYieldPrediction } from '@/services/dashboard';
 
 export default function YieldPredictor({ activeFarm }) {
-  const [params, setParams] = useState({
-    temperature: 28,
-    rainfall: 150,
-    soilPh: 6.2,
-    fertilizer: 120
-  });
-
+  const { user } = useAuth();
+  
   const [prediction, setPrediction] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleRunAnalysis = () => {
-    setIsAnalyzing(true);
-    setTimeout(() => {
-      // Basic mockup calculations to yield reasonable results
-      const baseYield = 450; // kg
-      const tempFactor = Math.max(0.5, 1 - Math.abs(params.temperature - 27) * 0.1);
-      const rainFactor = Math.max(0.6, 1 - Math.abs(params.rainfall - 180) * 0.002);
-      const phFactor = Math.max(0.4, 1 - Math.abs(params.soilPh - 6.5) * 0.3);
-      const fertFactor = Math.max(0.7, 1 - Math.abs(params.fertilizer - 100) * 0.003);
+  // Fetch initial predictions & baseline averages when activeFarm changes
+  useEffect(() => {
+    const loadPrediction = async () => {
+      if (!activeFarm || !user) return;
+      try {
+        setIsAnalyzing(true);
+        setError(null);
+        setPrediction(null);
+        // Call backend without params to run prediction on farm's actual log averages
+        const res = await fetchYieldPrediction(activeFarm.farm_id, user.token);
+        if (res && res.error) {
+          setError(res.error);
+        } else {
+          setPrediction(res);
+        }
+      } catch (err) {
+        console.error("Failed to load prediction:", err);
+        setError(err.message || "Unable to retrieve farm activity statistics.");
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
 
-      const predictedKg = Math.round(baseYield * tempFactor * rainFactor * phFactor * fertFactor);
-      const gradeA = Math.round(predictedKg * 0.65);
-      const gradeB = Math.round(predictedKg * 0.25);
-      const gradeC = predictedKg - gradeA - gradeB;
+    loadPrediction();
+  }, [activeFarm, user]);
 
-      setPrediction({
-        total: predictedKg,
-        breakdown: { A: gradeA, B: gradeB, C: gradeC },
-        accuracy: 94.2,
-        recommendation: params.soilPh < 6.0 
-          ? "Apply ground agricultural lime to raise soil pH toward the optimal 6.5 range for enhanced nutrient uptake."
-          : "Your parameters are in the optimal growth window! Maintain regular fertilizer cycles and irrigation."
-      });
-      setIsAnalyzing(false);
-    }, 1200);
-  };
+  const hasNoLogs = error && error.includes("No activity logs");
 
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      {/* Overview Card */}
+      {/* Overview / Banner Card */}
       <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 flex gap-4 items-start">
         <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-          <Bot size={24} />
+          <Brain size={24} />
         </div>
         <div>
-          <h3 className="font-extrabold text-gray-800 text-lg">AI Yield Predictor</h3>
+          <h3 className="font-extrabold text-gray-800 text-lg">ML Yield Predictor</h3>
           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-            Estimate seasonal harvest yields for <span className="font-bold text-green-700">{activeFarm?.farm_name || "your plantation"}</span> using Random Forest machine learning models trained on regional crop records.
+            Estimate seasonal harvest yields for <span className="font-bold text-green-700">{activeFarm?.farm_name || "your plantation"}</span>. 
+            This module derives environmental baselines from activity logs and predicts yields using custom-trained models.
           </p>
         </div>
       </div>
 
-      {/* Simulator Inputs */}
-      <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 space-y-5">
-        <h4 className="font-black text-gray-700 text-sm uppercase tracking-wider">Environmental Variables</h4>
-        
-        <div className="space-y-4">
-          {/* Temperature Slider */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span className="flex items-center gap-1"><Thermometer size={14} className="text-orange-400" /> Temperature</span>
-              <span className="text-gray-800">{params.temperature} °C</span>
-            </div>
-            <input 
-              type="range" min="20" max="38" step="1"
-              value={params.temperature}
-              onChange={(e) => setParams({ ...params, temperature: parseInt(e.target.value) })}
-              className="w-full accent-green-600 bg-gray-100 rounded-lg appearance-none h-1.5 cursor-pointer"
-            />
-          </div>
-
-          {/* Rainfall Slider */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span className="flex items-center gap-1"><Droplets size={14} className="text-blue-400" /> Monthly Rainfall</span>
-              <span className="text-gray-800">{params.rainfall} mm</span>
-            </div>
-            <input 
-              type="range" min="50" max="350" step="10"
-              value={params.rainfall}
-              onChange={(e) => setParams({ ...params, rainfall: parseInt(e.target.value) })}
-              className="w-full accent-green-600 bg-gray-100 rounded-lg appearance-none h-1.5 cursor-pointer"
-            />
-          </div>
-
-          {/* pH Slider */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span className="flex items-center gap-1"><Beaker size={14} className="text-violet-400" /> Soil pH</span>
-              <span className="text-gray-800">{params.soilPh}</span>
-            </div>
-            <input 
-              type="range" min="4.5" max="8.0" step="0.1"
-              value={params.soilPh}
-              onChange={(e) => setParams({ ...params, soilPh: parseFloat(e.target.value) })}
-              className="w-full accent-green-600 bg-gray-100 rounded-lg appearance-none h-1.5 cursor-pointer"
-            />
-          </div>
-
-          {/* Fertilizer Slider */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span className="flex items-center gap-1"><Sprout size={14} className="text-emerald-500" /> Fertilizer Volume</span>
-              <span className="text-gray-800">{params.fertilizer} kg/hectare</span>
-            </div>
-            <input 
-              type="range" min="20" max="250" step="5"
-              value={params.fertilizer}
-              onChange={(e) => setParams({ ...params, fertilizer: parseInt(e.target.value) })}
-              className="w-full accent-green-600 bg-gray-100 rounded-lg appearance-none h-1.5 cursor-pointer"
-            />
-          </div>
+      {isAnalyzing && (
+        <div className="bg-white p-12 rounded-[32px] shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-4 text-center">
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin"></div>
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">Training & Calibrating Models...</span>
         </div>
+      )}
 
-        <button 
-          onClick={handleRunAnalysis}
-          disabled={isAnalyzing}
-          className={`w-full py-4.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-600/10 transition-all duration-300 ${
-            isAnalyzing 
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-              : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-xl hover:shadow-green-600/20 active:scale-[0.98]'
-          }`}
-        >
-          {isAnalyzing ? (
-            <>
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
-              <span>RUNNING FOREST DYNAMICS...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles size={18} />
-              <span>RUN RANDOM FOREST ANALYSIS</span>
-            </>
-          )}
-        </button>
-      </div>
+      {error && !hasNoLogs && !isAnalyzing && (
+        <div className="bg-red-50 text-red-800 p-4 rounded-2xl border border-red-100 flex items-center gap-3 text-xs font-semibold">
+          <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-      {/* Analysis Results Display */}
-      {prediction && !isAnalyzing && (
-        <div className="bg-white p-6 rounded-[32px] shadow-md border border-green-50 space-y-5 animate-in slide-in-from-bottom-6 duration-300">
-          <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-            <h4 className="font-extrabold text-green-900 text-md flex items-center gap-1.5">
-              <Sparkles size={16} className="text-green-600" />
-              Predicted Output
-            </h4>
-            <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-              ACCURACY: {prediction.accuracy}%
-            </span>
+      {hasNoLogs && !isAnalyzing && (
+        <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/20 p-8 rounded-[32px] border border-green-100/50 shadow-sm text-center space-y-4 animate-in fade-in zoom-in-95 duration-400">
+          <div className="w-16 h-16 bg-green-100 text-green-700 rounded-full flex items-center justify-center mx-auto animate-pulse">
+            <Sprout size={32} />
           </div>
-
-          <div className="flex items-baseline justify-center gap-1.5 py-4">
-            <span className="text-4xl font-black text-green-800">{prediction.total}</span>
-            <span className="text-sm font-bold text-gray-500">kg / hectare</span>
+          <div className="max-w-xs mx-auto">
+            <h4 className="font-black text-gray-800 text-base">Calibration Required</h4>
+            <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
+              To run yield predictions for this farm, we need at least <strong>1 activity log record</strong> to formulate an environmental baseline.
+            </p>
           </div>
-
-          <div className="grid grid-cols-3 gap-2 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-            <div className="text-center">
-              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade A</span>
-              <p className="font-black text-gray-800 mt-2 text-md">{prediction.breakdown.A} kg</p>
-            </div>
-            <div className="text-center">
-              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade B</span>
-              <p className="font-black text-gray-800 mt-2 text-md">{prediction.breakdown.B} kg</p>
-            </div>
-            <div className="text-center">
-              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade C</span>
-              <p className="font-black text-gray-800 mt-2 text-md">{prediction.breakdown.C} kg</p>
-            </div>
-          </div>
-
-          <div className="bg-green-50/50 p-4.5 rounded-2xl border border-green-100/30 flex gap-3">
-            <Bot size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-green-800 leading-relaxed font-semibold">
-              <p className="font-black uppercase text-[10px] text-green-700 tracking-wider mb-0.5">Recommendation</p>
-              {prediction.recommendation}
-            </div>
+          <div className="text-[11px] text-green-800 bg-green-50/80 px-4 py-3 rounded-2xl border border-green-100/30 inline-block max-w-sm font-semibold leading-relaxed">
+            Please navigate to the <strong>Records</strong> tab and add an activity log containing temperature, rainfall, soil pH, and fertilizer data.
           </div>
         </div>
       )}
+
+      {/* Model Predictions and Baseline display */}
+      {prediction && !isAnalyzing && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-top-6 duration-400">
+          
+          {/* Read-Only Baselines Panel */}
+          <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 space-y-4">
+            <h4 className="font-black text-gray-700 text-xs uppercase tracking-wider">Active Environmental Baseline</h4>
+            <div className="grid grid-cols-2 gap-3.5">
+              
+              {/* Temp Metric */}
+              <div className="bg-orange-50/40 p-4 rounded-2xl border border-orange-100/30 flex items-center gap-3">
+                <div className="w-9 h-9 bg-orange-100/80 text-orange-600 rounded-xl flex items-center justify-center">
+                  <Thermometer size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Temperature</span>
+                  <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.temperature} °C</p>
+                </div>
+              </div>
+
+              {/* Rain Metric */}
+              <div className="bg-blue-50/40 p-4 rounded-2xl border border-blue-100/30 flex items-center gap-3">
+                <div className="w-9 h-9 bg-blue-100/80 text-blue-600 rounded-xl flex items-center justify-center">
+                  <Droplets size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Rainfall</span>
+                  <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.rainfall} mm</p>
+                </div>
+              </div>
+
+              {/* pH Metric */}
+              <div className="bg-violet-50/40 p-4 rounded-2xl border border-violet-100/30 flex items-center gap-3">
+                <div className="w-9 h-9 bg-violet-100/80 text-violet-600 rounded-xl flex items-center justify-center">
+                  <Beaker size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Soil pH</span>
+                  <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.soil_ph}</p>
+                </div>
+              </div>
+
+              {/* Fertilizer Metric */}
+              <div className="bg-emerald-50/40 p-4 rounded-2xl border border-emerald-100/30 flex items-center gap-3">
+                <div className="w-9 h-9 bg-emerald-100/80 text-emerald-600 rounded-xl flex items-center justify-center">
+                  <Sprout size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Fertilizer</span>
+                  <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.fertilizer} kg/ha</p>
+                </div>
+              </div>
+
+            </div>
+            <p className="text-[10px] text-gray-400 leading-normal italic text-center">
+              These values represent the mathematical average of all activity logs recorded for this farm.
+            </p>
+          </div>
+
+          <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+            <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-1.5">
+              <Sparkles size={16} className="text-green-600" />
+              Machine Learning Model Comparison
+            </h4>
+            <span className="text-[9px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Baseline Context
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            
+            {/* Random Forest Regressor Model Card */}
+            <div className="bg-white p-5 rounded-[28px] border-2 border-green-500/20 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <div className="absolute top-0 right-0 bg-green-600 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-bl-xl shadow-sm">
+                Recommended / Best Fit
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Random Forest Regressor</span>
+                <span className="text-[10px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
+                  ACCURACY: {prediction.random_forest.accuracy}%
+                </span>
+              </div>
+              <div className="flex items-baseline justify-start gap-1 py-1">
+                <span className="text-3xl font-black text-green-800">{prediction.random_forest.yield_predicted}</span>
+                <span className="text-xs font-bold text-gray-500">kg / hectare</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
+                <div className="text-center">
+                  <span className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade A</span>
+                  <p className="font-extrabold text-gray-700 mt-1.5 text-xs">{prediction.random_forest.grade_a} kg</p>
+                </div>
+                <div className="text-center">
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade B</span>
+                  <p className="font-extrabold text-gray-700 mt-1.5 text-xs">{prediction.random_forest.grade_b} kg</p>
+                </div>
+                <div className="text-center">
+                  <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade C</span>
+                  <p className="font-extrabold text-gray-700 mt-1.5 text-xs">{prediction.random_forest.grade_c} kg</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Linear Regression Model Card */}
+            <div className="bg-white p-5 rounded-[28px] border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Linear Regression Model</span>
+                <span className="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                  ACCURACY: {prediction.linear_regression.accuracy}%
+                </span>
+              </div>
+              <div className="flex items-baseline justify-start gap-1 py-1">
+                <span className="text-3xl font-black text-blue-800">{prediction.linear_regression.yield_predicted}</span>
+                <span className="text-xs font-bold text-gray-500">kg / hectare</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
+                <div className="text-center">
+                  <span className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade A</span>
+                  <p className="font-extrabold text-gray-700 mt-1.5 text-xs">{prediction.linear_regression.grade_a} kg</p>
+                </div>
+                <div className="text-center">
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade B</span>
+                  <p className="font-extrabold text-gray-700 mt-1.5 text-xs">{prediction.linear_regression.grade_b} kg</p>
+                </div>
+                <div className="text-center">
+                  <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade C</span>
+                  <p className="font-extrabold text-gray-700 mt-1.5 text-xs">{prediction.linear_regression.grade_c} kg</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* AI Recommendation Context Box */}
+          <div className="bg-green-50/50 p-5 rounded-[24px] border border-green-100/40 flex gap-3.5">
+            <Bot size={22} className="text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-green-800 leading-relaxed font-semibold">
+              <p className="font-black uppercase text-[10px] text-green-700 tracking-wider mb-1">AI Soil & Environmental Recommendation</p>
+              {prediction.recommendation}
+            </div>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }

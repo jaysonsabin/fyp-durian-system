@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Info, Beaker, Thermometer, Droplets, Bot, Save } from 'lucide-react';
 
-export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog }) {
+export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs }) {
   const [formData, setFormData] = useState({
     fertilizer_type: "NPK 15-15-15", 
     fertilizer_amount: "",
@@ -26,17 +26,18 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         pest_control: editingLog.pest_control || "None",
       });
     } else {
+      const latestLog = logs && logs.length > 0 ? logs[0] : null;
       setFormData({
-        fertilizer_type: "NPK 15-15-15",
+        fertilizer_type: latestLog ? latestLog.fertilizer_type : "NPK 15-15-15",
         fertilizer_amount: "",
         temperature: "",
         rainfall: "",
-        soil_ph: "",
+        soil_ph: latestLog ? latestLog.soil_ph : "6.2",
         remarks: "",
         pest_control: "None",
       });
     }
-  }, [editingLog, isOpen]);
+  }, [editingLog, isOpen, logs]);
 
   if (!isOpen) return null;
 
@@ -75,7 +76,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
       {/* Click outside backdrop to close */}
       <div className="absolute inset-0" onClick={onClose}></div>
 
-      <div className="bg-white w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 shadow-2xl relative z-10 animate-in slide-in-from-bottom-10 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 shadow-2xl relative z-10 animate-in slide-in-from-bottom-10 max-h-[90vh] overflow-y-auto thin-scrollbar">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-2xl font-extrabold text-green-900">
@@ -108,6 +109,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 className="w-full p-4 pr-11 bg-gray-50 border border-gray-200 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all"
               >
                 <option value="NPK 15-15-15">NPK 15-15-15</option>
+                <option value="NPK 12-12-17">NPK 12-12-17</option>
                 <option value="Organic">Organic</option>
               </select>
               <Beaker size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -117,7 +119,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           {/* Amount & pH */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Amount (kg)</label>
+              <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5 truncate">Total Amount (kg)</label>
               <input 
                 type="number" 
                 name="fertilizer_amount"
@@ -125,12 +127,24 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 onChange={handleChange}
                 step="0.01"
                 required
-                placeholder="e.g., 2.50"
+                placeholder="e.g., 150.00"
                 className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
               />
+              <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
+                Total weight for entire block.
+              </span>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Soil pH</label>
+              <div className="flex items-center gap-1.5 ml-2 mb-1.5">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase">Soil pH</label>
+                <div className="group relative cursor-pointer">
+                  <Info size={13} className="text-gray-400 hover:text-green-600 transition-colors" />
+                  <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-gray-900 text-white text-[10px] font-semibold leading-relaxed rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300 shadow-xl z-50 text-center">
+                    Use composite soil sample average. Test and update every 2-3 months.
+                    <div className="absolute top-full right-2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
               <input 
                 type="number" 
                 name="soil_ph"
@@ -138,9 +152,12 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 onChange={handleChange}
                 step="0.1"
                 required
-                placeholder="e.g., 6.5"
+                placeholder="e.g., 6.2"
                 className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
               />
+              <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
+                Slow-changing soil property.
+              </span>
             </div>
           </div>
 

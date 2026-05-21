@@ -39,9 +39,30 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("user_id")
         username: str = payload.get("sub")
+        role: str = payload.get("role")
+        user_type: str = payload.get("type")
         
         if user_id is None or username is None:
             raise credentials_exception
-        return {"id": user_id, "username": username}
+        return {"id": user_id, "username": username, "role": role, "type": user_type}
     except JWTError:
         raise credentials_exception
+
+from typing import Optional
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
+
+def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme_optional)) -> Optional[dict]:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get("user_id")
+        username: str = payload.get("sub")
+        role: str = payload.get("role")
+        user_type: str = payload.get("type")
+        
+        if user_id is None or username is None:
+            return None
+        return {"id": user_id, "username": username, "role": role, "type": user_type}
+    except JWTError:
+        return None

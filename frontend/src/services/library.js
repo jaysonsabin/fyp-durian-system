@@ -47,3 +47,62 @@ export async function deleteLibraryInteraction(payload) {
   }
   return res.json();
 }
+
+/**
+ * Uploads a new library resource.
+ * @param {Object} contentData - Library content attributes.
+ * @param {string} token - Auth token.
+ */
+export async function uploadLibraryContent(contentData, token) {
+  const res = await fetch(`${API_BASE}/library`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(contentData)
+  });
+  if (!res.ok) {
+    throw new Error("Failed to upload library content");
+  }
+  return res.json();
+}
+
+/**
+ * Updates an existing library resource.
+ * @param {string|number} contentId - ID of the resource.
+ * @param {Object} contentData - Library content attributes.
+ * @param {string} token - Auth token.
+ */
+export async function updateLibraryContent(contentId, contentData, token) {
+  const res = await fetch(`${API_BASE}/library/${contentId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(contentData)
+  });
+  if (!res.ok) {
+    throw new Error("Failed to update library content");
+  }
+  return res.json();
+}
+
+/**
+ * Deletes a library resource.
+ * @param {string|number} contentId - ID of the resource.
+ * @param {string} token - Auth token.
+ */
+export async function deleteLibraryContent(contentId, token) {
+  const res = await fetch(`${API_BASE}/library/${contentId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+  if (!res.ok) {
+    throw new Error("Failed to delete library content");
+  }
+  return res.json();
+}

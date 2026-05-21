@@ -12,6 +12,8 @@ from routers import auth
 from routers import users
 from routers import logs
 from routers import library
+from routers import forum
+from routers import yield_prediction
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Durian Farm Management System")
@@ -19,7 +21,14 @@ app = FastAPI(title="Durian Farm Management System")
 # Middlewares
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002"
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
     allow_headers=["Content-Type", "Authorization"],
@@ -31,6 +40,10 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(logs.router)
 app.include_router(library.router)
+app.include_router(forum.router)
+app.include_router(yield_prediction.router)
+
+
 
 # Root endpoint
 @app.get("/")

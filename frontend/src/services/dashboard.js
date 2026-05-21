@@ -172,3 +172,32 @@ export async function deleteActivityLog(logId, token) {
   }
   return response.json();
 }
+
+/**
+ * Fetches yield prediction analysis from backend for a specific farm.
+ * @param {string|number} farmId - The ID of the farm.
+ * @param {string} token - The auth token.
+ */
+export async function fetchYieldPrediction(farmId, token) {
+  try {
+    const response = await fetch(`${API_BASE}/farms/${farmId}/yield-prediction`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      let errMsg = "Failed to fetch yield prediction analysis";
+      try {
+        const errData = await response.json();
+        if (errData && errData.detail) {
+          errMsg = errData.detail;
+        }
+      } catch (_) {}
+      return { error: errMsg };
+    }
+    return response.json();
+  } catch (err) {
+    return { error: err.message || "Network error. Unable to connect to server." };
+  }
+}
+

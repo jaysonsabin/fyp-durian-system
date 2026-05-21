@@ -94,7 +94,7 @@ class InteractionOut(InteractionCreate):
 # LIBRARY CONTENT SCHEMAS
 # ==========================================
 class LibraryContentCreate(BaseModel):
-    admin_id: int
+    admin_id: Optional[int] = None
     title: str
     type: str
     category: str
@@ -129,3 +129,84 @@ class ActivityLogUpdate(BaseModel):
     rainfall: float
     soil_ph: float
     remarks: Optional[str] = None
+
+
+# ==========================================
+# FORUM SCHEMAS
+# ==========================================
+class ForumReactionCreate(BaseModel):
+    reaction_type: str = "Like"
+
+class ForumReactionOut(BaseModel):
+    reaction_id: int
+    post_id: int
+    user_id: int
+    reaction_type: str
+    reacted_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ForumReplyCreate(BaseModel):
+    reply_content: str
+
+class ForumReplyUpdate(BaseModel):
+    reply_content: str
+
+class ForumReplyOut(BaseModel):
+    reply_id: int
+    post_id: int
+    user_id: int
+    reply_content: str
+    replied_at: datetime
+    user: UserOut
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ForumPostCreate(BaseModel):
+    title: str
+    content: str
+    tag: Optional[str] = "General"
+    image_url: Optional[str] = None
+
+class ForumPostUpdate(BaseModel):
+    title: str
+    content: str
+    tag: Optional[str] = "General"
+    image_url: Optional[str] = None
+
+class ForumPostOut(BaseModel):
+    post_id: int
+    user_id: int
+    title: str
+    content: str
+    tag: str
+    image_url: Optional[str] = None
+    status: str
+    created_at: datetime
+    user: UserOut
+    replies: List[ForumReplyOut] = []
+    reactions: List[ForumReactionOut] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==========================================
+# YIELD PREDICTION SCHEMAS
+# ==========================================
+class ModelPredictionDetails(BaseModel):
+    yield_predicted: float
+    grade_a: float
+    grade_b: float
+    grade_c: float
+    accuracy: float
+
+class YieldPredictionResponse(BaseModel):
+    farm_id: int
+    farm_name: str
+    derived_inputs: dict
+    linear_regression: ModelPredictionDetails
+    random_forest: ModelPredictionDetails
+    recommendation: str
+

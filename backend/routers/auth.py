@@ -51,3 +51,23 @@ def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user_id": user.user_id 
     }
+
+@router.post("/register/admin", response_model=schemas.UserOut)
+def register_admin(admin_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(models.User).filter(models.User.username == admin_data.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+
+    hashed_pwd = security.get_password_hash(admin_data.password)
+
+    new_admin = models.Admin(
+        full_name=admin_data.full_name,
+        username=admin_data.username,
+        password_hash=hashed_pwd, 
+        role=models.UserRole.PENTADBIR, # Force role to admin
+        permission=models.AdminPermission.CONTENT_MANAGER
+    )
+    db.add(new_admin)
+    db.commit()
+    db.refresh(new_admin)
+    return new_admin

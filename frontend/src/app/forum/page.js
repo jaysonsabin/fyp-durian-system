@@ -1,101 +1,242 @@
-import { useState } from 'react';
-import { MessageSquare, Search, Heart, Send, Sparkles, Filter, PlusCircle, AlertTriangle } from 'lucide-react';
+"use client";
 
-const INITIAL_POSTS = [
-  {
-    id: 1,
-    author: "Ahmad Abdullah",
-    role: "Pengusaha (Raub)",
-    content: "Musang King farmgate price in Raub is trending around RM42 - RM46 per kg today. Anyone getting better offers for grade A fruits?",
-    tag: "Market Price",
-    likes: 8,
-    hasLiked: false,
-    replies: 3,
-    date: "2 hours ago"
-  },
-  {
-    id: 2,
-    author: "Siti Aminah",
-    role: "Pengusaha (Bentong)",
-    content: "Seeing early signs of stem canker (Phytophthora) on my older trees after last week's heavy rains. Recommend spraying metalaxyl or fosetyl-aluminium immediately if you notice resin bleeding.",
-    tag: "Pest Alert",
-    likes: 12,
-    hasLiked: false,
-    replies: 5,
-    date: "5 hours ago"
-  },
-  {
-    id: 3,
-    author: "John Wong",
-    role: "Pengusaha (Johor)",
-    content: "Just tested a 1:1 ratio of organic compost with NPK 15-15-15 on my 3-year-old trees. The leaf greenness and shoot elongation have improved significantly compared to chemical fertilizer alone.",
-    tag: "Fertilizer",
-    likes: 5,
-    hasLiked: false,
-    replies: 2,
-    date: "1 day ago"
-  }
-];
+import { useState, useEffect } from 'react';
+import { 
+  MessageSquare, Search, Heart, Send, Sparkles, PlusCircle, 
+  AlertTriangle, Edit2, Trash2, Check, X, Image, Lock, Unlock, Eye, EyeOff
+} from 'lucide-react';
+import { useAuth } from '@/app/context/auth_context';
+import {
+  fetchForumPosts,
+  createForumPost,
+  updateForumPost,
+  deleteForumPost,
+  toggleForumReaction,
+  createForumReply,
+  updateForumReply,
+  deleteForumReply,
+  lockForumPost,
+  hideForumPost
+} from '@/services/forum';
 
-export default function Forum({ currentUser }) {
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+export default function Forum() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Pentadbir';
+
+  // Feed states
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState("All");
+
+  // New Post form states
+  const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostTag, setNewPostTag] = useState("General");
+  const [newPostImageUrl, setNewPostImageUrl] = useState("");
   const [isPosting, setIsPosting] = useState(false);
 
-  const handleLike = (id) => {
-    setPosts(prev => prev.map(post => {
-      if (post.id === id) {
-        return {
-          ...post,
-          likes: post.hasLiked ? post.likes - 1 : post.likes + 1,
-          hasLiked: !post.hasLiked
-        };
-      }
-      return post;
-    }));
+  // Edit Post modal states
+  const [editingPost, setEditingPost] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editTag, setEditTag] = useState("General");
+  const [editImageUrl, setEditImageUrl] = useState("");
+
+  // Replies states
+  const [expandedPostId, setExpandedPostId] = useState(null);
+  const [replyText, setReplyText] = useState({}); // postId -> text string
+  const [editingReplyId, setEditingReplyId] = useState(null);
+  const [editReplyText, setEditReplyText] = useState("");
+
+  // Load posts from API
+  const loadPosts = async () => {
+    try {
+      const data = await fetchForumPosts(searchTerm, selectedTag, user?.token);
+      setPosts(data);
+    } catch (err) {
+      console.error("Error loading posts:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleCreatePost = (e) => {
+  useEffect(() => {
+    loadPosts();
+  }, [searchTerm, selectedTag, user]);
+
+  const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!newPostContent.trim()) return;
+    if (!newPostContent.trim() || !newPostTitle.trim()) return;
+    if (!user) return;
 
     setIsPosting(true);
-    
-    // Simulate API delay
-    setTimeout(() => {
-      const newPost = {
-        id: Date.now(),
-        author: currentUser?.username || "You",
-        role: "Grower (Verified)",
+    try {
+      await createForumPost({
+        title: newPostTitle,
         content: newPostContent,
         tag: newPostTag,
-        likes: 0,
-        hasLiked: false,
-        replies: 0,
-        date: "Just now"
-      };
-
-      setPosts([newPost, ...posts]);
+        image_url: newPostImageUrl.trim() || null
+      }, user.token);
+      setNewPostTitle("");
       setNewPostContent("");
+      setNewPostImageUrl("");
       setNewPostTag("General");
+      loadPosts();
+    } catch (err) {
+      console.error("Create post failed:", err);
+      alert("Failed to publish discussion.");
+    } finally {
       setIsPosting(false);
-    }, 600);
+    }
+  };
+
+  const handleStartEditPost = (post) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setEditTag(post.tag);
+    setEditImageUrl(post.image_url || "");
+  };
+
+  const handleSavePost = async (e) => {
+    e.preventDefault();
+    if (!editTitle.trim() || !editContent.trim()) return;
+    if (!user) return;
+
+    try {
+      await updateForumPost(editingPost.post_id, {
+        title: editTitle,
+        content: editContent,
+        tag: editTag,
+        image_url: editImageUrl.trim() || null
+      }, user.token);
+      setEditingPost(null);
+      loadPosts();
+    } catch (err) {
+      console.error("Failed to update post:", err);
+      alert("Failed to update discussion.");
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!user) return;
+    const confirmDelete = window.confirm(
+      "WARNING: Are you sure you want to delete this discussion thread? All replies and reactions will be permanently deleted. This action cannot be undone."
+    );
+    if (confirmDelete) {
+      try {
+        await deleteForumPost(postId, user.token);
+        loadPosts();
+      } catch (err) {
+        console.error("Failed to delete post:", err);
+        alert("Failed to delete discussion thread.");
+      }
+    }
+  };
+
+  const handleLike = async (postId, e) => {
+    e.stopPropagation();
+    if (!user) {
+      alert("Please log in to react to posts.");
+      return;
+    }
+    try {
+      await toggleForumReaction(postId, "Like", user.token);
+      loadPosts();
+    } catch (err) {
+      console.error("Like action failed:", err);
+    }
+  };
+
+  const handleCreateReply = async (postId) => {
+    const text = replyText[postId] || "";
+    if (!text.trim() || !user) return;
+
+    try {
+      await createForumReply(postId, { reply_content: text }, user.token);
+      setReplyText(prev => ({ ...prev, [postId]: "" }));
+      loadPosts();
+    } catch (err) {
+      console.error("Create reply failed:", err);
+      alert("Failed to post reply.");
+    }
+  };
+
+  const handleSaveReply = async (replyId) => {
+    if (!editReplyText.trim() || !user) return;
+
+    try {
+      await updateForumReply(replyId, { reply_content: editReplyText }, user.token);
+      setEditingReplyId(null);
+      setEditReplyText("");
+      loadPosts();
+    } catch (err) {
+      console.error("Failed to update reply:", err);
+      alert("Failed to update reply.");
+    }
+  };
+
+  const handleDeleteReply = async (replyId) => {
+    if (!user) return;
+    if (window.confirm("Are you sure you want to delete this reply?")) {
+      try {
+        await deleteForumReply(replyId, user.token);
+        loadPosts();
+      } catch (err) {
+        console.error("Failed to delete reply:", err);
+        alert("Failed to delete reply.");
+      }
+    }
+  };
+
+  const handleLockPost = async (postId) => {
+    if (!user) return;
+    try {
+      await lockForumPost(postId, user.token);
+      loadPosts();
+    } catch (err) {
+      console.error("Lock/unlock action failed:", err);
+      alert("Failed to lock/unlock post.");
+    }
+  };
+
+  const handleHidePost = async (postId) => {
+    if (!user) return;
+    try {
+      await hideForumPost(postId, user.token);
+      loadPosts();
+    } catch (err) {
+      console.error("Hide/unhide action failed:", err);
+      alert("Failed to hide/unhide post.");
+    }
+  };
+
+  const formatRole = (userObj) => {
+    if (!userObj) return "Grower";
+    return userObj.role === "Pentadbir" ? "Admin" : "Pengusaha";
+  };
+
+  const roleBadgeStyle = (userObj) => {
+    if (!userObj) return "bg-gray-100 text-gray-500 border border-gray-200";
+    if (userObj.role === "Pentadbir") {
+      return "bg-red-50 text-red-600 border border-red-100";
+    }
+    return "bg-green-50 text-green-700 border border-green-100";
+  };
+
+  const renderDate = (dateString) => {
+    if (!dateString) return "Recent";
+    const date = new Date(dateString);
+    return isNaN(date.getTime())
+      ? "Recent"
+      : date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
   const tags = ["All", "Fertilizer", "Pest Alert", "Market Price", "General"];
 
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.content.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          post.author.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTag = selectedTag === "All" || post.tag === selectedTag;
-    return matchesSearch && matchesTag;
-  });
-
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
       
       {/* Forum Header Banner */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-700 p-6 rounded-[32px] text-white shadow-lg relative overflow-hidden">
@@ -111,46 +252,74 @@ export default function Forum({ currentUser }) {
         </div>
       </div>
 
-      {/* Write New Post Form */}
-      <form onSubmit={handleCreatePost} className="bg-white p-5 rounded-[28px] shadow-sm border border-gray-100 space-y-3">
-        <textarea 
-          placeholder="Share your durian observations, ask about soil conditions, or check prices..."
-          value={newPostContent}
-          onChange={(e) => setNewPostContent(e.target.value)}
-          rows="2"
-          required
-          className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all resize-none"
-        ></textarea>
-        
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
-            <span className="font-bold">Tag:</span>
-            <select 
-              value={newPostTag}
-              onChange={(e) => setNewPostTag(e.target.value)}
-              className="bg-transparent outline-none font-bold text-green-700 cursor-pointer"
-            >
-              <option value="General">General</option>
-              <option value="Fertilizer">Fertilizer</option>
-              <option value="Pest Alert">Pest Alert</option>
-              <option value="Market Price">Market Price</option>
-            </select>
+      {/* Write New Post Form (Only show to authenticated users) */}
+      {user ? (
+        <form onSubmit={handleCreatePost} className="bg-white p-5 rounded-[28px] shadow-sm border border-gray-100 space-y-3.5">
+          <div className="space-y-2">
+            <input
+              type="text"
+              placeholder="Title of your discussion..."
+              value={newPostTitle}
+              onChange={(e) => setNewPostTitle(e.target.value)}
+              required
+              className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+            />
+            <textarea 
+              placeholder="Share your durian observations, ask about soil conditions, or check prices..."
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              rows="3"
+              required
+              className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all resize-none"
+            ></textarea>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Optional image URL (e.g. http://...)"
+                value={newPostImageUrl}
+                onChange={(e) => setNewPostImageUrl(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all pl-9"
+              />
+              <Image size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
           </div>
           
-          <button 
-            type="submit" 
-            disabled={isPosting || !newPostContent.trim()}
-            className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isPosting ? (
-              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            ) : (
-              <Send size={12} />
-            )}
-            <span>POST</span>
-          </button>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
+              <span className="font-bold">Tag:</span>
+              <select 
+                value={newPostTag}
+                onChange={(e) => setNewPostTag(e.target.value)}
+                className="bg-transparent outline-none font-bold text-green-700 cursor-pointer"
+              >
+                <option value="General">General</option>
+                <option value="Fertilizer">Fertilizer</option>
+                <option value="Pest Alert">Pest Alert</option>
+                <option value="Market Price">Market Price</option>
+              </select>
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={isPosting || !newPostContent.trim() || !newPostTitle.trim()}
+              className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-5 py-2.5 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isPosting ? (
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              ) : (
+                <Send size={12} />
+              )}
+              <span>POST</span>
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="bg-green-50 p-6 rounded-[28px] text-center border border-green-100 space-y-2">
+          <Sparkles size={28} className="text-green-600 mx-auto" />
+          <h4 className="font-bold text-green-800">Join the Growers Community</h4>
+          <p className="text-xs text-green-600 max-w-sm mx-auto">Log in to publish new discussions, reply to observations, and react to market prices.</p>
         </div>
-      </form>
+      )}
 
       {/* Search & Filter Toolbar */}
       <div className="space-y-3">
@@ -171,7 +340,7 @@ export default function Forum({ currentUser }) {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className={`px-4 py-1.5 text-xs font-black rounded-full border transition-all whitespace-nowrap ${
+              className={`px-4 py-1.5 text-xs font-black rounded-full border transition-all whitespace-nowrap cursor-pointer ${
                 selectedTag === tag 
                   ? "bg-green-600 border-green-600 text-white shadow-sm shadow-green-600/10" 
                   : "bg-white border-gray-100 text-gray-400 hover:text-green-600 hover:bg-green-50/30"
@@ -185,7 +354,11 @@ export default function Forum({ currentUser }) {
 
       {/* Post Feeds */}
       <div className="space-y-4">
-        {filteredPosts.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-10 text-gray-400 font-bold animate-pulse">
+            Loading discussions...
+          </div>
+        ) : posts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200 px-4">
             <AlertTriangle size={36} className="mx-auto text-gray-300 mb-2" />
             <p className="font-bold text-gray-700">No discussions found</p>
@@ -194,53 +367,360 @@ export default function Forum({ currentUser }) {
             </p>
           </div>
         ) : (
-          filteredPosts.map(post => (
-            <div key={post.id} className="bg-white p-5 rounded-[28px] shadow-sm border border-gray-100 space-y-3.5 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 text-white font-black text-sm flex items-center justify-center uppercase shadow-inner">
-                    {post.author.charAt(0)}
+          posts.map(post => {
+            const likes = post.reactions?.filter(r => r.reaction_type === "Like") || [];
+            const hasLiked = user && likes.some(r => Number(r.user_id) === Number(user.id));
+            const isOwner = user && Number(post.user_id) === Number(user.id);
+            const isPostExpanded = expandedPostId === post.post_id;
+            const isHidden = post.status === "Hidden";
+            const isLocked = post.status === "Locked";
+
+            return (
+              <div 
+                key={post.post_id} 
+                className={`bg-white p-5 rounded-[28px] shadow-sm border border-gray-100 space-y-3.5 hover:shadow-md transition-shadow ${
+                  isHidden ? "opacity-60 border-purple-100 bg-purple-50/5" : ""
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 text-white font-black text-sm flex items-center justify-center uppercase shadow-inner flex-shrink-0">
+                      {(post.user?.full_name || post.user?.username || "G").charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 text-xs leading-none">{post.user?.full_name || post.user?.username}</h4>
+                      <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5 ${roleBadgeStyle(post.user)}`}>
+                        {formatRole(post.user)}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-gray-800 text-xs leading-none">{post.author}</h4>
-                    <span className="text-[10px] text-gray-400 font-semibold">{post.role}</span>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 font-medium">{renderDate(post.created_at)}</span>
+                    
+                    {/* Admin Moderation Buttons */}
+                    {isAdmin && (
+                      <div className="flex items-center gap-1.5 ml-2 border-l border-gray-200 pl-2">
+                        <button
+                          onClick={() => handleLockPost(post.post_id)}
+                          className={`transition-colors p-1 cursor-pointer ${isLocked ? "text-amber-500 hover:text-amber-600" : "text-gray-400 hover:text-amber-500"}`}
+                          title={isLocked ? "Unlock Post" : "Lock Post"}
+                        >
+                          {isLocked ? <Unlock size={13} /> : <Lock size={13} />}
+                        </button>
+                        <button
+                          onClick={() => handleHidePost(post.post_id)}
+                          className={`transition-colors p-1 cursor-pointer ${isHidden ? "text-purple-500 hover:text-purple-600" : "text-gray-400 hover:text-purple-500"}`}
+                          title={isHidden ? "Unhide Post" : "Hide Post"}
+                        >
+                          {isHidden ? <Eye size={13} /> : <EyeOff size={13} />}
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post.post_id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                          title="Delete Post (Moderator)"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Standard Owner Buttons */}
+                    {isOwner && !isAdmin && (
+                      <div className="flex items-center gap-1.5 ml-2">
+                        <button
+                          onClick={() => handleStartEditPost(post)}
+                          className="text-gray-400 hover:text-blue-500 transition-colors p-1 cursor-pointer"
+                          title="Edit Post"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post.post_id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                          title="Delete Post"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
+                    {isOwner && isAdmin && (
+                      <div className="flex items-center gap-1.5 ml-1">
+                        <button
+                          onClick={() => handleStartEditPost(post)}
+                          className="text-gray-400 hover:text-blue-500 transition-colors p-1 cursor-pointer"
+                          title="Edit Post"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <span className="text-[10px] text-gray-400 font-medium">{post.date}</span>
-              </div>
 
-              <p className="text-sm text-gray-600 leading-relaxed font-normal whitespace-pre-wrap">{post.content}</p>
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-gray-800 text-sm">{post.title}</h4>
+                  <p className="text-sm text-gray-600 leading-relaxed font-normal whitespace-pre-wrap">{post.content}</p>
+                  
+                  {post.image_url && (
+                    <div className="relative rounded-2xl overflow-hidden max-h-64 mt-2 border border-gray-50 shadow-inner">
+                      <img src={post.image_url} alt={post.title} className="w-full h-full object-cover max-h-64" />
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex justify-between items-center border-t border-gray-50 pt-3">
-                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md ${
-                  post.tag === "Pest Alert" ? "bg-red-50 text-red-600" :
-                  post.tag === "Fertilizer" ? "bg-blue-50 text-blue-600" :
-                  post.tag === "Market Price" ? "bg-amber-50 text-amber-600" :
-                  "bg-gray-100 text-gray-500"
-                }`}>
-                  {post.tag}
-                </span>
+                <div className="flex justify-between items-center border-t border-gray-50 pt-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md ${
+                      post.tag === "Pest Alert" ? "bg-red-50 text-red-600" :
+                      post.tag === "Fertilizer" ? "bg-blue-50 text-blue-600" :
+                      post.tag === "Market Price" ? "bg-amber-50 text-amber-600" :
+                      "bg-gray-100 text-gray-500"
+                    }`}>
+                      {post.tag}
+                    </span>
 
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => handleLike(post.id)}
-                    className={`flex items-center gap-1 text-[11px] font-bold transition-all ${
-                      post.hasLiked ? 'text-red-500 scale-105' : 'text-gray-400 hover:text-red-400'
-                    }`}
-                  >
-                    <Heart size={14} className={post.hasLiked ? 'fill-red-500' : ''} />
-                    <span>{post.likes}</span>
-                  </button>
-                  <div className="flex items-center gap-1 text-[11px] font-bold text-gray-400">
-                    <MessageSquare size={14} />
-                    <span>{post.replies}</span>
+                    {isLocked && (
+                      <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-md animate-pulse">
+                        <Lock size={10} /> Locked
+                      </span>
+                    )}
+
+                    {isHidden && (
+                      <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-purple-50 text-purple-600 px-2.5 py-0.5 rounded-md">
+                        <EyeOff size={10} /> Hidden Content
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4">
+                    {/* Like button */}
+                    <button 
+                      onClick={(e) => handleLike(post.post_id, e)}
+                      className={`flex items-center gap-1 text-[11px] font-bold transition-all transform active:scale-95 cursor-pointer ${
+                        hasLiked ? 'text-red-500 font-extrabold' : 'text-gray-400 hover:text-red-400'
+                      }`}
+                    >
+                      <Heart size={14} className={hasLiked ? 'fill-red-500 text-red-500' : ''} />
+                      <span>{likes.length}</span>
+                    </button>
+                    
+                    {/* Replies count button */}
+                    <button
+                      onClick={() => setExpandedPostId(isPostExpanded ? null : post.post_id)}
+                      className={`flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors ${
+                        isPostExpanded ? 'text-green-600' : 'text-gray-400 hover:text-green-600'
+                      }`}
+                    >
+                      <MessageSquare size={14} />
+                      <span>{post.replies?.length || 0}</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* Expanded Replies Section */}
+                {isPostExpanded && (
+                  <div className="mt-4 pt-4 border-t border-gray-50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h5 className="text-xs font-extrabold text-gray-700">Replies ({post.replies?.length || 0})</h5>
+                    
+                    {/* Replies List */}
+                    <div className="space-y-3 max-h-72 overflow-y-auto no-scrollbar pr-1">
+                      {(!post.replies || post.replies.length === 0) ? (
+                        <p className="text-xs text-gray-400 italic">No replies yet. Be the first to reply!</p>
+                      ) : (
+                        post.replies.map(reply => {
+                          const isEditingReply = editingReplyId === reply.reply_id;
+                          const isReplyOwner = user && Number(reply.user_id) === Number(user.id);
+                          return (
+                            <div key={reply.reply_id} className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100/50 flex gap-3 items-start">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 text-white font-black text-xs flex items-center justify-center uppercase flex-shrink-0">
+                                {(reply.user?.full_name || reply.user?.username || "U").charAt(0)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div>
+                                    <span className="font-bold text-gray-800 text-[11px]">{reply.user?.full_name || reply.user?.username}</span>
+                                    <span className="text-[9px] text-gray-400 ml-2 font-semibold">({formatRole(reply.user)})</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[9px] text-gray-400">{renderDate(reply.replied_at)}</span>
+                                    {isReplyOwner && (
+                                      <div className="flex items-center gap-1">
+                                        <button
+                                          onClick={() => {
+                                            setEditingReplyId(reply.reply_id);
+                                            setEditReplyText(reply.reply_content);
+                                          }}
+                                          className="text-gray-400 hover:text-blue-500 p-0.5 cursor-pointer"
+                                          title="Edit Reply"
+                                        >
+                                          <Edit2 size={10} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteReply(reply.reply_id)}
+                                          className="text-gray-400 hover:text-red-500 p-0.5 cursor-pointer"
+                                          title="Delete Reply"
+                                        >
+                                          <Trash2 size={10} />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                {isEditingReply ? (
+                                  <div className="mt-2 flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={editReplyText}
+                                      onChange={(e) => setEditReplyText(e.target.value)}
+                                      className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-xs font-semibold text-gray-700"
+                                    />
+                                    <button
+                                      onClick={() => handleSaveReply(reply.reply_id)}
+                                      className="p-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors cursor-pointer"
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingReplyId(null)}
+                                      className="p-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-gray-600 mt-1 break-words leading-relaxed">{reply.reply_content}</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Add Reply Input */}
+                    {isLocked && !isAdmin ? (
+                      <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 p-3 rounded-2xl text-[10px] font-bold text-amber-700">
+                        <Lock size={12} className="text-amber-500 flex-shrink-0" />
+                        <span>Discussion locked by administrator. New replies are disabled.</span>
+                      </div>
+                    ) : user ? (
+                      <div className="flex gap-2 items-center pt-2">
+                        <input
+                          type="text"
+                          placeholder="Write a reply..."
+                          value={replyText[post.post_id] || ""}
+                          onChange={(e) => setReplyText({ ...replyText, [post.post_id]: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleCreateReply(post.post_id);
+                          }}
+                          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                        />
+                        <button
+                          onClick={() => handleCreateReply(post.post_id)}
+                          disabled={!(replyText[post.post_id] || "").trim()}
+                          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white p-2 rounded-xl active:scale-95 transition-all shadow-md shadow-green-600/10 cursor-pointer"
+                        >
+                          <Send size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-gray-400 italic">Please log in to write replies.</p>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
+
+      {/* Edit Post Modal Overlay */}
+      {editingPost && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] w-full max-w-lg p-6 shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-extrabold text-lg text-gray-800">Edit Discussion</h3>
+              <button 
+                onClick={() => setEditingPost(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSavePost} className="space-y-4 overflow-y-auto pr-1">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Discussion Title</label>
+                <input
+                  type="text"
+                  placeholder="Title..."
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Discussion Body</label>
+                <textarea 
+                  placeholder="Share details..."
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows="4"
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all resize-none"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Optional Image URL</label>
+                <input
+                  type="text"
+                  placeholder="Image URL..."
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
+                <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
+                  <span className="font-bold">Tag:</span>
+                  <select 
+                    value={editTag}
+                    onChange={(e) => setEditTag(e.target.value)}
+                    className="bg-transparent outline-none font-bold text-green-700 cursor-pointer"
+                  >
+                    <option value="General">General</option>
+                    <option value="Fertilizer">Fertilizer</option>
+                    <option value="Pest Alert">Pest Alert</option>
+                    <option value="Market Price">Market Price</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => setEditingPost(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    CANCEL
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-5 py-2.5 text-xs font-bold shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
+                  >
+                    SAVE CHANGES
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

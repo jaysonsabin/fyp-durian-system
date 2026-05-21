@@ -29,23 +29,43 @@ export default function DashboardPage() {
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
+
+  // If Admin, force activeModule to forum/library and bypass farm creation check!
+  useEffect(() => {
+    if (user?.role === 'Pentadbir') {
+      if (activeModule === 'records' || activeModule === 'yield') {
+        setActiveModule('forum');
+      }
+    }
+  }, [user, activeModule]);
   
   // Data States
   const [userFarms, setUserFarms] = useState([]);
   const [isLoadingFarms, setIsLoadingFarms] = useState(true);
+  const [activeFarm, setActiveFarm] = useState(null);
   const [logs, setLogs] = useState([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
   // 1. Fetch user farms
   const fetchFarmsData = async () => {
     if (!user) return;
+    if (user.role === 'Pentadbir') {
+      setIsLoadingFarms(false);
+      return;
+    }
     try {
       setIsLoadingFarms(true);
       const farms = await fetchFarms(user.id, user.token);
       setUserFarms(farms);
       
       if (farms.length > 0) {
-        fetchLogsData(farms[0].farm_id);
+        // If activeFarm is already set and exists in the loaded list, keep it; otherwise set to farms[0]
+        setActiveFarm((prev) => {
+          const exists = prev && farms.some(f => f.farm_id === prev.farm_id);
+          const nextActive = exists ? farms.find(f => f.farm_id === prev.farm_id) : farms[0];
+          fetchLogsData(nextActive.farm_id);
+          return nextActive;
+        });
       }
     } catch (error) {
       console.error("Error fetching farms:", error);
@@ -78,7 +98,11 @@ export default function DashboardPage() {
   // 4. Initial Fetch Effect
   useEffect(() => {
     if (user) {
-      fetchFarmsData();
+      if (user.role === 'Pentadbir') {
+        setIsLoadingFarms(false);
+      } else {
+        fetchFarmsData();
+      }
     }
   }, [user]);
 
@@ -94,6 +118,14 @@ export default function DashboardPage() {
     }
   };
 
+  const handleFarmChange = (farmId) => {
+    const selected = userFarms.find(f => f.farm_id === parseInt(farmId, 10));
+    if (selected) {
+      setActiveFarm(selected);
+      fetchLogsData(selected.farm_id);
+    }
+  };
+
   const handleSubmitActivity = async (formData) => {
     try {
       if (editingLog) {
@@ -105,8 +137,8 @@ export default function DashboardPage() {
         alert("Activity saved successfully!");
       }
       setShowRecordModal(false);
-      if (userFarms.length > 0) {
-        fetchLogsData(userFarms[0].farm_id);
+      if (activeFarm) {
+        fetchLogsData(activeFarm.farm_id);
       }
     } catch (error) {
       console.error("Error saving activity:", error);
@@ -124,8 +156,8 @@ export default function DashboardPage() {
     if (window.confirm("Are you sure you want to permanently delete this activity log record?")) {
       try {
         await deleteActivityLog(logId, user.token);
-        if (userFarms.length > 0) {
-          fetchLogsData(userFarms[0].farm_id);
+        if (activeFarm) {
+          fetchLogsData(activeFarm.farm_id);
         }
         alert("Activity log deleted successfully.");
       } catch (error) {
@@ -140,7 +172,7 @@ export default function DashboardPage() {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-green-500 font-bold text-sm tracking-wide">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-green-500/20 border-t-green-500 rounded-full animate-spin"></div>
           <span>Loading DurianFlow Secure Environment...</span>
         </div>
       </div>
@@ -148,7 +180,7 @@ export default function DashboardPage() {
   }
 
   // Interceptor: Force farm creation if zero exist
-  if (!isLoadingFarms && userFarms.length === 0) {
+  if (user?.role !== 'Pentadbir' && !isLoadingFarms && userFarms.length === 0) {
     return (
       <FarmCreationLock 
         onAddFarm={handleCreateFirstFarm} 
@@ -157,18 +189,31 @@ export default function DashboardPage() {
     );
   }
 
-  const activeFarm = userFarms[0];
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 min-h-screen">
       {/* Top Header */}
-      <header className="bg-white px-6 py-4 flex justify-between items-center shadow-sm sticky top-0 z-40 border-b border-gray-100">
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-emerald-500/10 bg-gradient-to-r from-green-600 to-emerald-700 px-6 py-4 shadow-lg">
         <div>
           <h2 className="text-xl font-bold text-gray-800 capitalize tracking-tight">{activeModule}</h2>
-          {activeFarm && (
-            <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mt-0.5">
-              {activeFarm.farm_name}
-            </p>
+          {user?.role !== 'Pentadbir' && activeFarm && userFarms.length > 0 && (
+            <div className="relative mt-1">
+              <select
+                value={activeFarm.farm_id}
+                onChange={(e) => handleFarmChange(e.target.value)}
+                className="appearance-none bg-green-50/80 hover:bg-green-100/80 text-green-700 font-extrabold text-[10px] uppercase tracking-wider pl-3 pr-8 py-1.5 rounded-xl border border-green-100 outline-none cursor-pointer transition-all duration-300"
+              >
+                {userFarms.map((farm) => (
+                  <option key={farm.farm_id} value={farm.farm_id} className="text-gray-800 bg-white capitalize normal-case text-sm font-semibold">
+                    {farm.farm_name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-green-700">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           )}
         </div>
         <button 
@@ -178,6 +223,7 @@ export default function DashboardPage() {
           <User size={18} />
         </button>
       </header>
+
 
       {/* Profile Sidebar Panel */}
       <ProfilePanel 
@@ -221,6 +267,7 @@ export default function DashboardPage() {
         activeModule={activeModule} 
         setActiveModule={setActiveModule} 
         setShowRecordModal={setShowRecordModal} 
+        userRole={user?.role}
       />
 
       {/* Add/Edit Activity Modal Form */}
@@ -233,6 +280,7 @@ export default function DashboardPage() {
         activeFarm={activeFarm} 
         onSubmit={handleSubmitActivity} 
         editingLog={editingLog}
+        logs={logs}
       />
     </div>
   );

@@ -110,3 +110,49 @@ class ContentInteraction(Base):
 
     # Relationship back to the content
     content = relationship("LibraryContent", back_populates="interactions")
+
+
+class ForumPost(Base):
+    __tablename__ = "forum_posts"
+
+    post_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    tag = Column(String(80), default="General", nullable=False)
+    image_url = Column(String(500), nullable=True)
+    status = Column(String(50), default="Active", nullable=False)  # Active, Locked, Deleted
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User")
+    replies = relationship("ForumReply", back_populates="post", cascade="all, delete-orphan")
+    reactions = relationship("ForumReaction", back_populates="post", cascade="all, delete-orphan")
+
+
+class ForumReply(Base):
+    __tablename__ = "forum_replies"
+
+    reply_id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("forum_posts.post_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    reply_content = Column(Text, nullable=False)
+    replied_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    post = relationship("ForumPost", back_populates="replies")
+    user = relationship("User")
+
+
+class ForumReaction(Base):
+    __tablename__ = "forum_reactions"
+
+    reaction_id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("forum_posts.post_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    reaction_type = Column(String(50), default="Like", nullable=False)  # e.g., Like
+    reacted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    post = relationship("ForumPost", back_populates="reactions")
+    user = relationship("User")

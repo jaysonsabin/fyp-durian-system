@@ -11,3 +11,23 @@
     --shadow: 0 4px 6px rgba(0,0,0,0.1);
     --radius: 12px;
 }
+
+/* Custom thin scrollbar utility */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px; /* Makes it thin */
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Removes background track */
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* slate-300 color */
+  border-radius: 10px; /* Fully rounded edges */
+}
+
+/* Firefox support */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
