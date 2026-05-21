@@ -201,3 +201,22 @@ export async function fetchYieldPrediction(farmId, token) {
   }
 }
 
+/**
+ * Fetches the current weather metrics for a specific farm.
+ * @param {string|number} farmId - The ID of the farm.
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} Object containing temperature and rainfall.
+ */
+export async function fetchCurrentWeather(farmId, token) {
+  const response = await fetch(`${API_BASE}/farms/${farmId}/current-weather`, {
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch current weather data");
+  }
+  return response.json();
+}
+
+

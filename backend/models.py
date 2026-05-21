@@ -56,6 +56,8 @@ class Farm(Base):
     farmer_id = Column(Integer, ForeignKey("farmers.user_id"), nullable=False)
     farm_name = Column(String(120), nullable=False)
     farm_location = Column(String(255), nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     owner = relationship("Farmer", back_populates="farms")
     logs = relationship("ActivityLog", back_populates="farm", cascade="all, delete-orphan")
 

@@ -14,6 +14,7 @@ from routers import logs
 from routers import library
 from routers import forum
 from routers import yield_prediction
+from routers import weather
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Durian Farm Management System")
@@ -42,6 +43,7 @@ app.include_router(logs.router)
 app.include_router(library.router)
 app.include_router(forum.router)
 app.include_router(yield_prediction.router)
+app.include_router(weather.router)
 
 
 

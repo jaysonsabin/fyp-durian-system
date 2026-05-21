@@ -42,6 +42,8 @@ class FarmOut(BaseModel):
     farm_name: str
     farm_location: str
     farmer_id: int
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -74,6 +76,10 @@ class ActivityLogOut(BaseModel):
     remarks: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class WeatherOut(BaseModel):
+    temperature: float
+    rainfall: float
 
 # ==========================================
 # CONTENT INTERACTION SCHEMAS

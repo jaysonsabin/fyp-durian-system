@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, Info, Beaker, Thermometer, Droplets, Bot, Save } from 'lucide-react';
+import { fetchCurrentWeather } from '@/services/dashboard';
 
-export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs }) {
+export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs, token }) {
   const [formData, setFormData] = useState({
     fertilizer_type: "NPK 15-15-15", 
     fertilizer_amount: "",
@@ -13,8 +14,11 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingWeather, setIsFetchingWeather] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (editingLog) {
       setFormData({
         fertilizer_type: editingLog.fertilizer_type || "NPK 15-15-15",
@@ -36,8 +40,26 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         remarks: "",
         pest_control: "None",
       });
+
+      if (activeFarm?.farm_id && token) {
+        setIsFetchingWeather(true);
+        fetchCurrentWeather(activeFarm.farm_id, token)
+          .then((weather) => {
+            setFormData(prev => ({
+              ...prev,
+              temperature: weather.temperature !== undefined ? weather.temperature : "",
+              rainfall: weather.rainfall !== undefined ? weather.rainfall : "",
+            }));
+          })
+          .catch((err) => {
+            console.error("Failed to fetch current weather:", err);
+          })
+          .finally(() => {
+            setIsFetchingWeather(false);
+          });
+      }
     }
-  }, [editingLog, isOpen, logs]);
+  }, [editingLog, isOpen, logs, activeFarm?.farm_id, token]);
 
   if (!isOpen) return null;
 
@@ -162,37 +184,56 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           </div>
 
           {/* Temp & Rain */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Temp (°C)</label>
-              <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-200 focus-within:ring-2 focus-within:ring-green-500/30 focus-within:border-green-600 transition-all">
-                <Thermometer size={18} className="text-orange-400 flex-shrink-0" />
-                <input 
-                  type="number" 
-                  name="temperature"
-                  value={formData.temperature}
-                  onChange={handleChange}
-                  step="0.1"
-                  required
-                  placeholder="28.5"
-                  className="bg-transparent outline-none w-full text-sm font-semibold text-gray-700" 
-                />
-              </div>
+          <div className="relative">
+            <div className="flex justify-between items-center ml-2 mb-1.5">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">Weather Conditions</span>
+              {isFetchingWeather ? (
+                <span className="text-[9px] text-green-600 font-extrabold animate-pulse flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
+                  Detecting local forecast...
+                </span>
+              ) : (
+                !editingLog && (
+                  <span className="text-[9px] text-emerald-600 font-black tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
+                    Auto-filled by Open-Meteo
+                  </span>
+                )
+              )}
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Rainfall (mm)</label>
-              <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-200 focus-within:ring-2 focus-within:ring-green-500/30 focus-within:border-green-600 transition-all">
-                <Droplets size={18} className="text-blue-400 flex-shrink-0" />
-                <input 
-                  type="number" 
-                  name="rainfall"
-                  value={formData.rainfall}
-                  onChange={handleChange}
-                  step="0.1"
-                  required
-                  placeholder="120.0"
-                  className="bg-transparent outline-none w-full text-sm font-semibold text-gray-700" 
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1">Temp (°C)</label>
+                <div className={`flex items-center gap-2 p-4 rounded-2xl border border-gray-200 focus-within:ring-2 focus-within:ring-green-500/30 focus-within:border-green-600 transition-all ${isFetchingWeather ? 'bg-gray-100/50 animate-pulse' : 'bg-gray-50'}`}>
+                  <Thermometer size={18} className="text-orange-400 flex-shrink-0" />
+                  <input 
+                    type="number" 
+                    name="temperature"
+                    value={formData.temperature}
+                    onChange={handleChange}
+                    step="0.1"
+                    required
+                    disabled={isFetchingWeather}
+                    placeholder={isFetchingWeather ? "..." : "28.5"}
+                    className="bg-transparent outline-none w-full text-sm font-semibold text-gray-700 disabled:opacity-50" 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1">Rainfall (mm)</label>
+                <div className={`flex items-center gap-2 p-4 rounded-2xl border border-gray-200 focus-within:ring-2 focus-within:ring-green-500/30 focus-within:border-green-600 transition-all ${isFetchingWeather ? 'bg-gray-100/50 animate-pulse' : 'bg-gray-50'}`}>
+                  <Droplets size={18} className="text-blue-400 flex-shrink-0" />
+                  <input 
+                    type="number" 
+                    name="rainfall"
+                    value={formData.rainfall}
+                    onChange={handleChange}
+                    step="0.1"
+                    required
+                    disabled={isFetchingWeather}
+                    placeholder={isFetchingWeather ? "..." : "120.0"}
+                    className="bg-transparent outline-none w-full text-sm font-semibold text-gray-700 disabled:opacity-50" 
+                  />
+                </div>
               </div>
             </div>
           </div>

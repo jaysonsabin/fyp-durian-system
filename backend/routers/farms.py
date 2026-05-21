@@ -4,15 +4,19 @@ from typing import List
 
 import models, schemas, security
 from dependencies.db import get_db
+from services.weather import geocode_location
 
 router = APIRouter()
 
 @router.post("/farms", response_model=schemas.FarmOut)
 def create_farm(farm_data: schemas.FarmCreate, db: Session = Depends(get_db)):
+    lat, lon = geocode_location(farm_data.farm_location)
     new_farm = models.Farm(
         farm_name=farm_data.farm_name,
         farm_location=farm_data.farm_location,
-        farmer_id=farm_data.farmer_id
+        farmer_id=farm_data.farmer_id,
+        latitude=lat,
+        longitude=lon
     )
     db.add(new_farm)
     db.commit()
@@ -39,6 +43,13 @@ def update_farm(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Access Denied. You do not own this plantation."
         )
+    
+    # Geocode if location changed or coords are missing
+    if farm.farm_location != farm_data.farm_location or farm.latitude is None or farm.longitude is None:
+        lat, lon = geocode_location(farm_data.farm_location)
+        farm.latitude = lat
+        farm.longitude = lon
+        
     farm.farm_name = farm_data.farm_name
     farm.farm_location = farm_data.farm_location
     db.commit()

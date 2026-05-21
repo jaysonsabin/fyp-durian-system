@@ -281,6 +281,7 @@ export default function DashboardPage() {
         onSubmit={handleSubmitActivity} 
         editingLog={editingLog}
         logs={logs}
+        token={user?.token}
       />
     </div>
   );
