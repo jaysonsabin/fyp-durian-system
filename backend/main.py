@@ -11,7 +11,8 @@ from routers import farms
 from routers import auth
 from routers import users
 from routers import logs
-from routers import library
+from routers import library_content
+from routers import library_interaction
 from routers import forum
 from routers import yield_prediction
 from routers import weather
@@ -40,7 +41,8 @@ app.include_router(farms.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(logs.router)
-app.include_router(library.router)
+app.include_router(library_interaction.router)
+app.include_router(library_content.router)
 app.include_router(forum.router)
 app.include_router(yield_prediction.router)
 app.include_router(weather.router)

@@ -58,6 +58,7 @@ class ActivityLogCreate(BaseModel):
     fertilizer_type: FertilizerEnum
     fertilizer_amount: float
     pest_control: Optional[str] = None
+    activity_type: str = "Fertilization"
     temperature: float
     rainfall: float
     soil_ph: float
@@ -69,6 +70,7 @@ class ActivityLogOut(BaseModel):
     log_date: datetime
     fertilizer_type: FertilizerEnum
     fertilizer_amount: float
+    activity_type: str
     temperature: float
     rainfall: float
     soil_ph: float
@@ -131,6 +133,7 @@ class ActivityLogUpdate(BaseModel):
     fertilizer_type: FertilizerEnum
     fertilizer_amount: float
     pest_control: Optional[str] = None
+    activity_type: str = "Fertilization"
     temperature: float
     rainfall: float
     soil_ph: float

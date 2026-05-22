@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { BookOpen, FileText, Video, ExternalLink, Search, X, Heart, Bookmark, Download, Edit2, Trash2, Plus } from "lucide-react";
 import { useAuth } from "@/app/context/auth_context";
+import CustomSelect from "@/app/components/custom-select";
+
+const resourceTypeOptions = [
+  { value: "PDF", label: "PDF Guide", emoji: "📄" },
+  { value: "Video", label: "Video Tutorial", emoji: "🎥" }
+];
+
 
 import {
   fetchLibraryContents,
@@ -89,7 +96,7 @@ export default function Library() {
     // UX first
     window.open(content.media_url, "_blank");
 
-    if (!user) return;
+    if (!user || user.role === "Pentadbir") return;
 
     logLibraryInteraction({
       content_id: content.content_id,
@@ -113,6 +120,10 @@ export default function Library() {
   const handleToggleLike = async (content, e) => {
     e.stopPropagation();
     if (!user) return;
+    if (user.role === "Pentadbir") {
+      alert("Administrators cannot like resources.");
+      return;
+    }
 
     const isLiked = content.interactions?.some(
       (i) => i.interaction_type === "Liked" && i.farmer_id === user.id
@@ -160,6 +171,10 @@ export default function Library() {
   const handleToggleBookmark = async (content, e) => {
     e.stopPropagation();
     if (!user) return;
+    if (user.role === "Pentadbir") {
+      alert("Administrators cannot bookmark resources.");
+      return;
+    }
 
     const isBookmarked = content.interactions?.some(
       (i) => i.interaction_type === "Bookmarked" && i.farmer_id === user.id
@@ -220,7 +235,7 @@ export default function Library() {
     link.click();
     document.body.removeChild(link);
 
-    if (!user) return;
+    if (!user || user.role === "Pentadbir") return;
 
     try {
       const newInteraction = await logLibraryInteraction({
@@ -451,14 +466,13 @@ export default function Library() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Type</label>
-                  <select 
+                  <CustomSelect 
+                    name="form_type"
                     value={formType}
                     onChange={(e) => setFormType(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white cursor-pointer"
-                  >
-                    <option value="PDF">PDF Guide</option>
-                    <option value="Video">Video Tutorial</option>
-                  </select>
+                    options={resourceTypeOptions}
+                    buttonClassName="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white cursor-pointer flex items-center justify-between text-left"
+                  />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Category</label>

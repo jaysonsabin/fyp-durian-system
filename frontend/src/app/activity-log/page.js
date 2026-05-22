@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from 'lucide-react';
+import CustomSelect from '@/app/components/custom-select';
+
 
 // Shared Layout Components
 import BottomNav from '@/app/components/bottom_nav';
@@ -197,22 +199,19 @@ export default function DashboardPage() {
           <h2 className="text-xl font-bold text-gray-800 capitalize tracking-tight">{activeModule}</h2>
           {user?.role !== 'Pentadbir' && activeFarm && userFarms.length > 0 && (
             <div className="relative mt-1">
-              <select
+              <CustomSelect 
+                name="active_farm_id"
                 value={activeFarm.farm_id}
                 onChange={(e) => handleFarmChange(e.target.value)}
-                className="appearance-none bg-green-50/80 hover:bg-green-100/80 text-green-700 font-extrabold text-[10px] uppercase tracking-wider pl-3 pr-8 py-1.5 rounded-xl border border-green-100 outline-none cursor-pointer transition-all duration-300"
-              >
-                {userFarms.map((farm) => (
-                  <option key={farm.farm_id} value={farm.farm_id} className="text-gray-800 bg-white capitalize normal-case text-sm font-semibold">
-                    {farm.farm_name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-green-700">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+                options={userFarms.map((farm) => ({
+                  value: farm.farm_id,
+                  label: farm.farm_name
+                }))}
+                buttonClassName="appearance-none bg-green-50/80 hover:bg-green-100/80 text-green-700 font-extrabold text-[10px] uppercase tracking-wider pl-3 pr-8 py-1.5 rounded-xl border border-green-100 outline-none cursor-pointer transition-all duration-300 flex items-center justify-between gap-1"
+                chevronSize={10}
+                containerClassName="inline-block"
+                menuClassName="absolute left-0 mt-1.5 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-[150] py-1 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200 thin-scrollbar"
+              />
             </div>
           )}
         </div>
@@ -234,7 +233,7 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-5 pb-32">
-        <div className="max-w-md mx-auto">
+        <div className="w-full max-w-5xl mx-auto">
           {activeModule === 'records' && (
             <ActivityHistory 
               logs={logs} 

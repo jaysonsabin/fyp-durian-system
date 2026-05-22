@@ -76,6 +76,7 @@ class ActivityLog(Base):
     fertilizer_type = Column(String(50), nullable=False)
     fertilizer_amount = Column(Float, nullable=False) # DOUBLE maps to Float
     pest_control = Column(String(150), nullable=True) # Null = Ya (Nullable)
+    activity_type = Column(String(80), default="Fertilization", server_default="Fertilization", nullable=False)
     temperature = Column(Float, nullable=False)
     rainfall = Column(Float, nullable=False)
     soil_ph = Column(Float, nullable=False)

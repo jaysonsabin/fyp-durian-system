@@ -6,6 +6,15 @@ import {
   AlertTriangle, Edit2, Trash2, Check, X, Image, Lock, Unlock, Eye, EyeOff
 } from 'lucide-react';
 import { useAuth } from '@/app/context/auth_context';
+import CustomSelect from '@/app/components/custom-select';
+
+const forumTagOptions = [
+  { value: "General", label: "General"},
+  { value: "Fertilizer", label: "Fertilizer"},
+  { value: "Pest Alert", label: "Pest Alert"},
+  { value: "Market Price", label: "Market Price"}
+];
+
 import {
   fetchForumPosts,
   createForumPost,
@@ -287,16 +296,16 @@ export default function Forum() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
               <span className="font-bold">Tag:</span>
-              <select 
+              <CustomSelect 
+                name="new_post_tag"
                 value={newPostTag}
                 onChange={(e) => setNewPostTag(e.target.value)}
-                className="bg-transparent outline-none font-bold text-green-700 cursor-pointer"
-              >
-                <option value="General">General</option>
-                <option value="Fertilizer">Fertilizer</option>
-                <option value="Pest Alert">Pest Alert</option>
-                <option value="Market Price">Market Price</option>
-              </select>
+                options={forumTagOptions}
+                buttonClassName="bg-transparent outline-none font-bold text-green-700 cursor-pointer flex items-center gap-1 text-xs"
+                chevronSize={12}
+                containerClassName="inline-block"
+                menuClassName="absolute left-0 mt-2 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-[150] py-2 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 thin-scrollbar"
+              />
             </div>
             
             <button 
@@ -689,16 +698,16 @@ export default function Forum() {
               <div className="flex justify-between items-center pt-2">
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
                   <span className="font-bold">Tag:</span>
-                  <select 
+                  <CustomSelect 
+                    name="edit_tag"
                     value={editTag}
                     onChange={(e) => setEditTag(e.target.value)}
-                    className="bg-transparent outline-none font-bold text-green-700 cursor-pointer"
-                  >
-                    <option value="General">General</option>
-                    <option value="Fertilizer">Fertilizer</option>
-                    <option value="Pest Alert">Pest Alert</option>
-                    <option value="Market Price">Market Price</option>
-                  </select>
+                    options={forumTagOptions}
+                    buttonClassName="bg-transparent outline-none font-bold text-green-700 cursor-pointer flex items-center gap-1 text-xs"
+                    chevronSize={12}
+                    containerClassName="inline-block"
+                    menuClassName="absolute left-0 mt-2 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-[150] py-2 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 thin-scrollbar"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">

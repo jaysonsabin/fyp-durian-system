@@ -148,22 +148,16 @@ export default function YieldPredictor({ activeFarm }) {
           <div className="flex justify-between items-center border-b border-gray-200 pb-2">
             <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-1.5">
               <Sparkles size={16} className="text-green-600" />
-              Machine Learning Model Comparison
+              Yield Predictions
             </h4>
-            <span className="text-[9px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Baseline Context
-            </span>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
             
             {/* Random Forest Regressor Model Card */}
             <div className="bg-white p-5 rounded-[28px] border-2 border-green-500/20 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg">
-              <div className="absolute top-0 right-0 bg-green-600 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-bl-xl shadow-sm">
-                Recommended / Best Fit
-              </div>
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Random Forest Regressor</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Random Forest Model</span>
                 <span className="text-[10px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
                   ACCURACY: {prediction.random_forest.accuracy}%
                 </span>

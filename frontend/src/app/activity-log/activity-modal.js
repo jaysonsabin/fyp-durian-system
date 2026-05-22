@@ -1,9 +1,34 @@
 import { useState, useEffect } from 'react';
 import { X, Info, Beaker, Thermometer, Droplets, Bot, Save } from 'lucide-react';
 import { fetchCurrentWeather } from '@/services/dashboard';
+import CustomSelect from '@/app/components/custom-select';
+
+const activityTypeOptions = [
+  { value: "Fertilization", label: "Fertilization (Pembajaan)"},
+  { value: "Pruning", label: "Pruning (Pemangkasan)"},
+  { value: "Irrigation", label: "Irrigation (Penyiraman)"},
+  { value: "Weeding", label: "Weeding (Merumpai)"},
+  { value: "Pest/Disease Spraying", label: "Pest Spraying (Kawalan Perosak)"},
+  { value: "Fruit Tying & Thinning", label: "Fruit Tying & Thinning (Mengikat/Menjarang)"},
+  { value: "Harvesting", label: "Harvesting (Penuaian)"}
+];
+
+const fertilizerTypeOptions = [
+  { value: "NPK 15-15-15", label: "NPK 15-15-15"},
+  { value: "NPK 12-12-17", label: "NPK 12-12-17"},
+  { value: "Organic", label: "Organic"}
+];
+
+const pestControlOptions = [
+  { value: "None", label: "No Pest Treatment"},
+  { value: "Fungicide (Canker)", label: "Fungicide (Stem Canker)"},
+  { value: "Insecticide (Borers)", label: "Insecticide (Seed Borers)"},
+  { value: "Organic (Neem)", label: "Organic (Neem Oil)"}
+];
 
 export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs, token }) {
   const [formData, setFormData] = useState({
+    activity_type: "Fertilization",
     fertilizer_type: "NPK 15-15-15", 
     fertilizer_amount: "",
     temperature: "", 
@@ -21,8 +46,9 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
 
     if (editingLog) {
       setFormData({
+        activity_type: editingLog.activity_type || "Fertilization",
         fertilizer_type: editingLog.fertilizer_type || "NPK 15-15-15",
-        fertilizer_amount: editingLog.fertilizer_amount || "",
+        fertilizer_amount: editingLog.fertilizer_amount !== undefined && editingLog.fertilizer_amount !== null ? editingLog.fertilizer_amount : "",
         temperature: editingLog.temperature || "",
         rainfall: editingLog.rainfall || "",
         soil_ph: editingLog.soil_ph || "",
@@ -32,6 +58,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
     } else {
       const latestLog = logs && logs.length > 0 ? logs[0] : null;
       setFormData({
+        activity_type: "Fertilization",
         fertilizer_type: latestLog ? latestLog.fertilizer_type : "NPK 15-15-15",
         fertilizer_amount: "",
         temperature: "",
@@ -72,12 +99,21 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit({
-        ...formData,
+      const payload = {
+        activity_type: formData.activity_type,
+        fertilizer_type: formData.activity_type === "Fertilization" ? formData.fertilizer_type : "None",
+        fertilizer_amount: formData.activity_type === "Fertilization" ? (parseFloat(formData.fertilizer_amount) || 0.0) : 0.0,
+        pest_control: formData.activity_type === "Pest/Disease Spraying" ? formData.pest_control : "None",
+        temperature: parseFloat(formData.temperature) || 0.0,
+        rainfall: parseFloat(formData.rainfall) || 0.0,
+        soil_ph: parseFloat(formData.soil_ph) || 0.0,
+        remarks: formData.remarks,
         farm_id: activeFarm?.farm_id
-      });
+      };
+      await onSubmit(payload);
       // Reset form fields
       setFormData({
+        activity_type: "Fertilization",
         fertilizer_type: "NPK 15-15-15", 
         fertilizer_amount: "",
         temperature: "", 
@@ -120,45 +156,80 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Fertilizer Type */}
+          {/* Activity Type Selector */}
           <div className="relative">
-            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Fertilizer Type</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Activity Type</label>
+            <CustomSelect 
+              name="activity_type"
+              value={formData.activity_type}
+              onChange={handleChange}
+              options={activityTypeOptions}
+            />
+          </div>
+
+          {/* Fertilizer Type (Conditionally rendered) */}
+          {formData.activity_type === "Fertilization" && (
             <div className="relative">
-              <select 
+              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Fertilizer Type</label>
+              <CustomSelect 
                 name="fertilizer_type"
                 value={formData.fertilizer_type}
                 onChange={handleChange}
-                className="w-full p-4 pr-11 bg-gray-50 border border-gray-200 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all"
-              >
-                <option value="NPK 15-15-15">NPK 15-15-15</option>
-                <option value="NPK 12-12-17">NPK 12-12-17</option>
-                <option value="Organic">Organic</option>
-              </select>
-              <Beaker size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Amount & pH */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5 truncate">Total Amount (kg)</label>
-              <input 
-                type="number" 
-                name="fertilizer_amount"
-                value={formData.fertilizer_amount}
-                onChange={handleChange}
-                step="0.01"
-                required
-                placeholder="e.g., 150.00"
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
+                options={fertilizerTypeOptions}
+                icon={Beaker}
               />
-              <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
-                Total weight for entire block.
-              </span>
             </div>
+          )}
+
+          {/* Amount & pH Layout */}
+          {formData.activity_type === "Fertilization" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5 truncate">Total Amount (kg)</label>
+                <input 
+                  type="number" 
+                  name="fertilizer_amount"
+                  value={formData.fertilizer_amount}
+                  onChange={handleChange}
+                  step="0.01"
+                  required={formData.activity_type === "Fertilization"}
+                  placeholder="e.g., 150.00"
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
+                />
+                <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
+                  Total weight.
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 ml-2 mb-1.5">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase">Soil pH</label>
+                  <div className="group relative cursor-pointer">
+                    <Info size={13} className="text-gray-400 hover:text-green-600 transition-colors" />
+                    <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-gray-900 text-white text-[10px] font-semibold leading-relaxed rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300 shadow-xl z-50 text-center">
+                      Use composite soil sample average. Test and update every 2-3 months.
+                      <div className="absolute top-full right-2 border-4 border-transparent border-t-gray-900"></div>
+                    </div>
+                  </div>
+                </div>
+                <input 
+                  type="number" 
+                  name="soil_ph"
+                  value={formData.soil_ph}
+                  onChange={handleChange}
+                  step="0.1"
+                  required
+                  placeholder="e.g., 6.2"
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
+                />
+                <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
+                  Soil property.
+                </span>
+              </div>
+            </div>
+          ) : (
             <div>
               <div className="flex items-center gap-1.5 ml-2 mb-1.5">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase">Soil pH</label>
+                <label className="text-xs font-bold text-gray-400 uppercase">Soil pH</label>
                 <div className="group relative cursor-pointer">
                   <Info size={13} className="text-gray-400 hover:text-green-600 transition-colors" />
                   <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-gray-900 text-white text-[10px] font-semibold leading-relaxed rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300 shadow-xl z-50 text-center">
@@ -178,12 +249,12 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
               />
               <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
-                Slow-changing soil property.
+                Soil property.
               </span>
             </div>
-          </div>
+          )}
 
-          {/* Temp & Rain */}
+          {/* Temp & Rain (Always display as weather stats are universal) */}
           <div className="relative">
             <div className="flex justify-between items-center ml-2 mb-1.5">
               <span className="text-[10px] font-bold text-gray-400 uppercase">Weather Conditions</span>
@@ -238,24 +309,19 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
             </div>
           </div>
 
-          {/* Pest Control */}
-          <div className="relative">
-            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Pest Control Treatment</label>
+          {/* Pest Control (Conditionally rendered) */}
+          {formData.activity_type === "Pest/Disease Spraying" && (
             <div className="relative">
-              <select 
+              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Pest Control Treatment</label>
+              <CustomSelect 
                 name="pest_control"
                 value={formData.pest_control}
                 onChange={handleChange}
-                className="w-full p-4 pr-11 bg-gray-50 border border-gray-200 rounded-2xl appearance-none outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all"
-              >
-                <option value="None">No Pest Treatment</option>
-                <option value="Fungicide (Canker)">Fungicide (Stem Canker)</option>
-                <option value="Insecticide (Borers)">Insecticide (Seed Borers)</option>
-                <option value="Organic (Neem)">Organic (Neem Oil)</option>
-              </select>
-              <Bot size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                options={pestControlOptions}
+                icon={Bot}
+              />
             </div>
-          </div>
+          )}
 
           {/* Remarks */}
           <div>

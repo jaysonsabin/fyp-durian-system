@@ -42,7 +42,9 @@ def get_yield_prediction(
     avg_temp = sum(log.temperature for log in logs) / len(logs)
     avg_rain = sum(log.rainfall for log in logs) / len(logs)
     avg_ph = sum(log.soil_ph for log in logs) / len(logs)
-    avg_fert = sum(log.fertilizer_amount for log in logs) / len(logs)
+    
+    fert_logs = [log.fertilizer_amount for log in logs if log.fertilizer_amount > 0]
+    avg_fert = sum(fert_logs) / len(fert_logs) if fert_logs else 0.0
 
     derived_inputs = {
         "temperature": round(avg_temp, 2),

@@ -79,6 +79,7 @@ def update_activity_log(
     log.fertilizer_type = log_data.fertilizer_type
     log.fertilizer_amount = log_data.fertilizer_amount
     log.pest_control = log_data.pest_control
+    log.activity_type = log_data.activity_type
     log.temperature = log_data.temperature
     log.rainfall = log_data.rainfall
     log.soil_ph = log_data.soil_ph
