@@ -1,10 +1,15 @@
+import os
 import bcrypt
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from dotenv import load_dotenv
 
-SECRET_KEY = "!DP90tt0035wot7751sp6689s8a2@#%$^&*()_+" 
+
+load_dotenv() 
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY") 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
