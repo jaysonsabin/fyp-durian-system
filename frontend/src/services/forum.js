@@ -11,12 +11,7 @@ export async function fetchForumPosts(searchTerm = "", tag = "", token = null) {
   if (tag) url += `tag=${encodeURIComponent(tag)}&`;
   if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
   
-  const headers = {};
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(url, { headers });
+  const res = await fetch(url, { credentials: "include" });
   if (!res.ok) {
     throw new Error("Failed to fetch forum posts");
   }
@@ -32,9 +27,9 @@ export async function createForumPost(postData, token) {
   const res = await fetch(`${API_BASE}/forum/posts`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(postData)
   });
   if (!res.ok) {
@@ -53,9 +48,9 @@ export async function updateForumPost(postId, postData, token) {
   const res = await fetch(`${API_BASE}/forum/posts/${postId}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(postData)
   });
   if (!res.ok) {
@@ -72,9 +67,7 @@ export async function updateForumPost(postId, postData, token) {
 export async function deleteForumPost(postId, token) {
   const res = await fetch(`${API_BASE}/forum/posts/${postId}`, {
     method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!res.ok) {
     throw new Error("Failed to delete forum post");
@@ -92,9 +85,9 @@ export async function toggleForumReaction(postId, reactionType, token) {
   const res = await fetch(`${API_BASE}/forum/posts/${postId}/react`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify({ reaction_type: reactionType })
   });
   if (!res.ok) {
@@ -113,9 +106,9 @@ export async function createForumReply(postId, replyData, token) {
   const res = await fetch(`${API_BASE}/forum/posts/${postId}/replies`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(replyData)
   });
   if (!res.ok) {
@@ -134,9 +127,9 @@ export async function updateForumReply(replyId, replyData, token) {
   const res = await fetch(`${API_BASE}/forum/replies/${replyId}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(replyData)
   });
   if (!res.ok) {
@@ -153,9 +146,7 @@ export async function updateForumReply(replyId, replyData, token) {
 export async function deleteForumReply(replyId, token) {
   const res = await fetch(`${API_BASE}/forum/replies/${replyId}`, {
     method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!res.ok) {
     throw new Error("Failed to delete forum reply");
@@ -171,9 +162,7 @@ export async function deleteForumReply(replyId, token) {
 export async function lockForumPost(postId, token) {
   const res = await fetch(`${API_BASE}/forum/posts/${postId}/lock`, {
     method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!res.ok) {
     throw new Error("Failed to lock/unlock forum post");
@@ -189,9 +178,7 @@ export async function lockForumPost(postId, token) {
 export async function hideForumPost(postId, token) {
   const res = await fetch(`${API_BASE}/forum/posts/${postId}/hide`, {
     method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!res.ok) {
     throw new Error("Failed to hide/unhide forum post");

@@ -9,62 +9,58 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Decode JWT payload helper
-  const decodeToken = (token) => {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      return null;
-    }
-  };
-
   // 1. Check for a session when the app starts
   useEffect(() => {
-    const token = localStorage.getItem("durian_token");
-    const userId = localStorage.getItem("userId");
-
-    if (token && userId) {
-      const decoded = decodeToken(token);
-      setUser({ 
-        id: userId, 
-        token: token, 
-        role: decoded?.role, 
-        type: decoded?.type, 
-        username: decoded?.sub 
-      });
-    }
-    setLoading(false);
+    const checkSession = async () => {
+      try {
+        const response = await fetch("http://localhost:8001/auth/me", {
+          credentials: "include"
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUser({ 
+            id: data.id, 
+            role: data.role, 
+            username: data.username 
+          });
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkSession();
   }, []);
 
   // 2. Global Login Function
-  const login = (token, userId) => {
-    localStorage.setItem("durian_token", token);
-    localStorage.setItem("userId", userId);
-    const decoded = decodeToken(token);
+  const login = (userData) => {
     setUser({ 
-      id: userId, 
-      token: token, 
-      role: decoded?.role, 
-      type: decoded?.type, 
-      username: decoded?.sub 
+      id: userData.id, 
+      role: userData.role, 
+      username: userData.username 
     });
     
-    if (decoded?.role === "Pentadbir") {
-      router.push('/activity-log'); // We stay in /activity-log shell but page.js forces 'forum' module!
+    if (userData.role === "Pentadbir") {
+      router.push('/activity-log');
     } else {
       router.push('/activity-log');
     }
   };
 
   // 3. Global Logout Function
-  const logout = () => {
-    localStorage.removeItem("durian_token");
-    localStorage.removeItem("userId");
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:8001/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (e) {
+      console.error("Logout request failed:", e);
+    }
     setUser(null);
     router.push("/");
   };

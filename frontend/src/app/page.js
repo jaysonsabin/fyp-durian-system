@@ -28,16 +28,13 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        
-        // 3. Instead of setting localStorage manually and forcing a push,
-        // we let AuthContext manage the entire global application state session!
-        login(data.access_token, data.user_id); 
-        
+        login(data); 
       } else {
         setError("Invalid username or password.");
       }

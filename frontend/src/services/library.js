@@ -57,9 +57,9 @@ export async function uploadLibraryContent(contentData, token) {
   const res = await fetch(`${API_BASE}/library`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(contentData)
   });
   if (!res.ok) {
@@ -78,9 +78,9 @@ export async function updateLibraryContent(contentId, contentData, token) {
   const res = await fetch(`${API_BASE}/library/${contentId}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(contentData)
   });
   if (!res.ok) {
@@ -97,9 +97,7 @@ export async function updateLibraryContent(contentId, contentData, token) {
 export async function deleteLibraryContent(contentId, token) {
   const res = await fetch(`${API_BASE}/library/${contentId}`, {
     method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!res.ok) {
     throw new Error("Failed to delete library content");

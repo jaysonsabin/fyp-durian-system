@@ -1,8 +1,9 @@
 import os
 import bcrypt
+from typing import Optional
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
 
@@ -33,30 +34,31 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# THE MISSING LINK: The security gatekeeper function
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+def get_current_user(request: Request) -> dict:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    # 1. Read token directly from request cookies
+    token = request.cookies.get("durian_token")
+    if not token:
+        raise credentials_exception
+        
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("user_id")
         username: str = payload.get("sub")
         role: str = payload.get("role")
-        user_type: str = payload.get("type")
         
         if user_id is None or username is None:
             raise credentials_exception
-        return {"id": user_id, "username": username, "role": role, "type": user_type}
+        return {"id": user_id, "username": username, "role": role}
     except JWTError:
         raise credentials_exception
 
-from typing import Optional
-oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
-
-def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme_optional)) -> Optional[dict]:
+def get_current_user_optional(request: Request) -> Optional[dict]:
+    token = request.cookies.get("durian_token")
     if not token:
         return None
     try:

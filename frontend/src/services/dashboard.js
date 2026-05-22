@@ -8,9 +8,7 @@ const API_BASE = "http://localhost:8001";
  */
 export async function fetchFarms(userId, token) {
   const response = await fetch(`${API_BASE}/farms/${userId}`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!response.ok) {
     throw new Error("Failed to fetch farms");
@@ -26,9 +24,7 @@ export async function fetchFarms(userId, token) {
  */
 export async function fetchLogs(farmId, token) {
   const response = await fetch(`${API_BASE}/farms/${farmId}/logs`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!response.ok) {
     throw new Error("Failed to fetch activity logs");
@@ -47,9 +43,9 @@ export async function createFarm(farmName, farmLocation, farmerId, token) {
   const response = await fetch(`${API_BASE}/farms`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify({
       farm_name: farmName,
       farm_location: farmLocation,
@@ -71,9 +67,9 @@ export async function createActivityLog(formData, token) {
   const response = await fetch(`${API_BASE}/logs`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify({
       ...formData,
       farm_id: parseInt(formData.farm_id, 10),
@@ -99,9 +95,9 @@ export async function updateFarm(farmId, farmData, token) {
   const response = await fetch(`${API_BASE}/farms/${farmId}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify(farmData),
   });
   if (!response.ok) {
@@ -118,9 +114,7 @@ export async function updateFarm(farmId, farmData, token) {
 export async function deleteFarm(farmId, token) {
   const response = await fetch(`${API_BASE}/farms/${farmId}`, {
     method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!response.ok) {
     throw new Error("Failed to delete farm");
@@ -138,9 +132,9 @@ export async function updateActivityLog(logId, logData, token) {
   const response = await fetch(`${API_BASE}/logs/${logId}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+      "Content-Type": "application/json"
     },
+    credentials: "include",
     body: JSON.stringify({
       ...logData,
       fertilizer_amount: parseFloat(logData.fertilizer_amount),
@@ -163,9 +157,7 @@ export async function updateActivityLog(logId, logData, token) {
 export async function deleteActivityLog(logId, token) {
   const response = await fetch(`${API_BASE}/logs/${logId}`, {
     method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!response.ok) {
     throw new Error("Failed to delete activity log");
@@ -181,9 +173,7 @@ export async function deleteActivityLog(logId, token) {
 export async function fetchYieldPrediction(farmId, token) {
   try {
     const response = await fetch(`${API_BASE}/farms/${farmId}/yield-prediction`, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
+      credentials: "include"
     });
     if (!response.ok) {
       let errMsg = "Failed to fetch yield prediction analysis";
@@ -209,9 +199,7 @@ export async function fetchYieldPrediction(farmId, token) {
  */
 export async function fetchCurrentWeather(farmId, token) {
   const response = await fetch(`${API_BASE}/farms/${farmId}/current-weather`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    credentials: "include"
   });
   if (!response.ok) {
     throw new Error("Failed to fetch current weather data");
