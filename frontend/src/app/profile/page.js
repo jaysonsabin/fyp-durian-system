@@ -91,7 +91,7 @@ export default function ProfilePage() {
     if (!user) return;
     try {
       const response = await fetch(`http://localhost:8001/farms/${user.id}`, {
-        headers: { "Authorization": `Bearer ${user.token}` }
+        credentials: "include"
       });
       if (response.ok) {
         const data = await response.json();
@@ -107,7 +107,7 @@ export default function ProfilePage() {
     if (!user) return;
     try {
       const response = await fetch(`http://localhost:8001/users/${user.id}/profile`, {
-        headers: { "Authorization": `Bearer ${user.token}` }
+        credentials: "include"
       });
       if (response.ok) {
         const data = await response.json();
@@ -149,9 +149,9 @@ export default function ProfilePage() {
       const response = await fetch(`http://localhost:8001/users/${user.id}/profile`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`
+          "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           full_name: profileData.full_name,
           address: profileData.address
@@ -180,9 +180,9 @@ export default function ProfilePage() {
       const response = await fetch("http://localhost:8001/farms", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`
+          "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           farm_name: newFarmData.farm_name,
           farm_location: newFarmData.farm_location,

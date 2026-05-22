@@ -26,7 +26,7 @@ const pestControlOptions = [
   { value: "Organic (Neem)", label: "Organic (Neem Oil)"}
 ];
 
-export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs, token }) {
+export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs }) {
   const [formData, setFormData] = useState({
     activity_type: "Fertilization",
     fertilizer_type: "NPK 15-15-15", 
@@ -68,9 +68,9 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         pest_control: "None",
       });
 
-      if (activeFarm?.farm_id && token) {
+      if (activeFarm?.farm_id) {
         setIsFetchingWeather(true);
-        fetchCurrentWeather(activeFarm.farm_id, token)
+        fetchCurrentWeather(activeFarm.farm_id)
           .then((weather) => {
             setFormData(prev => ({
               ...prev,
@@ -86,7 +86,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           });
       }
     }
-  }, [editingLog, isOpen, logs, activeFarm?.farm_id, token]);
+  }, [editingLog, isOpen, logs, activeFarm?.farm_id]);
 
   if (!isOpen) return null;
 

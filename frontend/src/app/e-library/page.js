@@ -259,7 +259,7 @@ export default function Library() {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !user.token) return;
+    if (!user) return;
     try {
       await uploadLibraryContent({
         title: formTitle,
@@ -268,7 +268,7 @@ export default function Library() {
         description: formDescription,
         media_url: formMediaUrl,
         published_by: formPublishedBy || "DurianFlow Admin",
-      }, user.token);
+      });
       
       setShowUploadModal(false);
       resetForm();
@@ -283,7 +283,7 @@ export default function Library() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !user.token || !editingResource) return;
+    if (!user || !editingResource) return;
     try {
       await updateLibraryContent(editingResource.content_id, {
         title: formTitle,
@@ -292,7 +292,7 @@ export default function Library() {
         description: formDescription,
         media_url: formMediaUrl,
         published_by: formPublishedBy || "DurianFlow Admin",
-      }, user.token);
+      });
       
       setEditingResource(null);
       resetForm();
@@ -307,10 +307,10 @@ export default function Library() {
 
   const handleDeleteResource = async (contentId, e) => {
     e.stopPropagation();
-    if (!user || !user.token) return;
+    if (!user) return;
     if (window.confirm("Are you sure you want to permanently delete this resource?")) {
       try {
-        await deleteLibraryContent(contentId, user.token);
+        await deleteLibraryContent(contentId);
         const data = await fetchLibraryContents();
         setContents(data);
         alert("Resource deleted successfully.");
