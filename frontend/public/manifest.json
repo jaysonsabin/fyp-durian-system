@@ -1,0 +1,25 @@
+{
+  "name": "Farm Management and AI-Based Yield Prediction System",
+  "short_name": "DurianFlow",
+  "description": "Premium Offline-First Farm & Yield Management for Durian Growers",
+  "theme_color": "#16a34a",
+  "background_color": "#111827",
+  "display": "standalone",
+  "orientation": "any",
+  "start_url": "/",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/icons/Durian_192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/Durian_512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

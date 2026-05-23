@@ -17,21 +17,21 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
   const getActivityBadge = (type) => {
     switch (type) {
       case "Fertilization": 
-        return { emoji: "🌾", label: "Fertilization", color: "bg-emerald-50 text-emerald-700 border-emerald-100" };
+        return { label: "Fertilization", color: "bg-emerald-50 text-emerald-700 border-emerald-100" };
       case "Pruning": 
-        return { emoji: "✂️", label: "Pruning", color: "bg-blue-50 text-blue-700 border-blue-100" };
+        return { label: "Pruning", color: "bg-blue-50 text-blue-700 border-blue-100" };
       case "Irrigation": 
-        return { emoji: "💦", label: "Irrigation", color: "bg-cyan-50 text-cyan-700 border-cyan-100" };
+        return { label: "Irrigation", color: "bg-cyan-50 text-cyan-700 border-cyan-100" };
       case "Weeding": 
-        return { emoji: "🌿", label: "Weeding", color: "bg-amber-50 text-amber-700 border-amber-100" };
+        return { label: "Weeding", color: "bg-amber-50 text-amber-700 border-amber-100" };
       case "Pest/Disease Spraying": 
-        return { emoji: "🐛", label: "Pest Spraying", color: "bg-purple-50 text-purple-700 border-purple-100" };
+        return { label: "Pest Spraying", color: "bg-purple-50 text-purple-700 border-purple-100" };
       case "Fruit Tying & Thinning": 
-        return { emoji: "🏷️", label: "Thinning/Tying", color: "bg-rose-50 text-rose-700 border-rose-100" };
+        return { label: "Thinning/Tying", color: "bg-rose-50 text-rose-700 border-rose-100" };
       case "Harvesting": 
-        return { emoji: "📦", label: "Harvesting", color: "bg-orange-50 text-orange-700 border-orange-100" };
+        return { label: "Harvesting", color: "bg-orange-50 text-orange-700 border-orange-100" };
       default: 
-        return { emoji: "📝", label: type || "Activity", color: "bg-gray-50 text-gray-700 border-gray-100" };
+        return { label: type || "Activity", color: "bg-gray-50 text-gray-700 border-gray-100" };
     }
   };
 
@@ -77,11 +77,15 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
             "Fruit Tying & Thinning": "border-l-rose-500",
             "Harvesting": "border-l-orange-500"
           };
-          const borderClass = borderColors[log.activity_type] || "border-l-gray-400";
+          
+          // Force yellow border for offline records
+          const borderClass = log.pendingSync 
+            ? "border-l-amber-500 bg-amber-50/5" 
+            : (borderColors[log.activity_type] || "border-l-gray-400");
 
           return (
             <div 
-              key={log.log_id || index} 
+              key={log.log_id || `offline-${index}`} 
               className={`bg-white p-5 rounded-3xl shadow-sm border border-l-4 ${borderClass} border-y-gray-100/85 border-r-gray-100/85 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 group`}
             >
               <div className="flex justify-between items-center mb-2">
@@ -90,28 +94,45 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                     <span>{badge.emoji}</span>
                     <span>{badge.label}</span>
                   </span>
+                  
+                  {log.pendingSync && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200 animate-pulse uppercase tracking-wider">
+                    Pending Sync
+                    </span>
+                  )}
+
                   <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                     <Calendar size={12} className="text-gray-300" />
-                    {formatDate(log.log_date)}
+                    {formatDate(log.log_date || log.createdAt)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {index === 0 && (
+                  {index === 0 && !log.pendingSync && (
                     <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
                       Latest
                     </span>
                   )}
                   <button
-                    onClick={() => onEditLog && onEditLog(log)}
-                    className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-1 rounded-lg transition-colors cursor-pointer"
-                    title="Edit activity"
+                    onClick={() => !log.pendingSync && onEditLog && onEditLog(log)}
+                    disabled={log.pendingSync}
+                    className={`p-1 rounded-lg transition-colors ${
+                      log.pendingSync 
+                        ? 'text-gray-200 cursor-not-allowed opacity-50' 
+                        : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer'
+                    }`}
+                    title={log.pendingSync ? "Cannot edit unsynced offline log" : "Edit activity"}
                   >
                     <Edit2 size={12} />
                   </button>
                   <button
-                    onClick={() => onDeleteLog && onDeleteLog(log.log_id)}
-                    className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1 rounded-lg transition-colors cursor-pointer"
-                    title="Delete activity"
+                    onClick={() => !log.pendingSync && onDeleteLog && onDeleteLog(log.log_id)}
+                    disabled={log.pendingSync}
+                    className={`p-1 rounded-lg transition-colors ${
+                      log.pendingSync 
+                        ? 'text-gray-200 cursor-not-allowed opacity-50' 
+                        : 'text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
+                    }`}
+                    title={log.pendingSync ? "Cannot delete unsynced offline log" : "Delete activity"}
                   >
                     <Trash2 size={12} />
                   </button>

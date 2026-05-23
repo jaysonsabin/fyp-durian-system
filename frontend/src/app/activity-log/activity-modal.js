@@ -57,18 +57,20 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
       });
     } else {
       const latestLog = logs && logs.length > 0 ? logs[0] : null;
+      const isOnline = typeof window !== 'undefined' ? window.navigator.onLine : true;
+
       setFormData({
         activity_type: "Fertilization",
         fertilizer_type: latestLog ? latestLog.fertilizer_type : "NPK 15-15-15",
         fertilizer_amount: "",
-        temperature: "",
-        rainfall: "",
+        temperature: !isOnline && latestLog ? latestLog.temperature : "",
+        rainfall: !isOnline && latestLog ? latestLog.rainfall : "",
         soil_ph: latestLog ? latestLog.soil_ph : "6.2",
         remarks: "",
         pest_control: "None",
       });
 
-      if (activeFarm?.farm_id) {
+      if (isOnline && activeFarm?.farm_id) {
         setIsFetchingWeather(true);
         fetchCurrentWeather(activeFarm.farm_id)
           .then((weather) => {
@@ -110,6 +112,43 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         remarks: formData.remarks,
         farm_id: activeFarm?.farm_id
       };
+
+      // Check if online or offline
+      const isOnline = typeof window !== 'undefined' ? window.navigator.onLine : true;
+      if (!isOnline) {
+        try {
+          const { saveOfflineLog } = await import('@/utils/offline-db');
+          const offlinePayload = {
+            ...payload,
+            log_date: new Date().toISOString() // Pre-fill log_date so the UI renders it nicely
+          };
+          await saveOfflineLog(offlinePayload);
+          alert("Saved Offline: Connection offline. Your activity has been saved locally and will auto-sync when connection is restored.");
+          
+          // Reset form fields
+          setFormData({
+            activity_type: "Fertilization",
+            fertilizer_type: "NPK 15-15-15", 
+            fertilizer_amount: "",
+            temperature: "", 
+            rainfall: "", 
+            soil_ph: "", 
+            remarks: "",
+            pest_control: "None",
+          });
+
+          if (onSubmit) {
+            onSubmit(payload, true);
+          }
+        } catch (dbErr) {
+          console.error("Failed to save log offline:", dbErr);
+          alert("Failed to save activity offline: " + dbErr.message);
+        } finally {
+          setIsSubmitting(false);
+        }
+        return;
+      }
+
       await onSubmit(payload);
       // Reset form fields
       setFormData({
@@ -265,9 +304,15 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 </span>
               ) : (
                 !editingLog && (
-                  <span className="text-[9px] text-emerald-600 font-black tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
-                    Auto-filled by Open-Meteo
-                  </span>
+                  typeof window !== 'undefined' && !window.navigator.onLine ? (
+                    <span className="text-[9px] text-amber-600 font-black tracking-wider bg-amber-50 px-2 py-0.5 rounded-full uppercase">
+                      Latest Known Values (Offline)
+                    </span>
+                  ) : (
+                    <span className="text-[9px] text-emerald-600 font-black tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
+                      Auto-filled by Open-Meteo
+                    </span>
+                  )
                 )
               )}
             </div>

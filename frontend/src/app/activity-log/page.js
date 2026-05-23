@@ -76,19 +76,84 @@ export default function DashboardPage() {
     }
   };
 
-  // 2. Fetch activity logs for a farm
+  // 2. Fetch activity logs for a farm (merging API logs + local offline logs)
   const fetchLogsData = async (farmId) => {
     if (!user) return;
     try {
       setIsLoadingLogs(true);
-      const data = await fetchLogs(farmId, user.token);
-      setLogs([...data].reverse()); 
+      
+      let apiLogs = [];
+      try {
+        apiLogs = await fetchLogs(farmId, user.token);
+      } catch (err) {
+        console.warn("Failed to fetch logs from API (offline?):", err);
+      }
+
+      // Query local IndexedDB for pending logs
+      let pendingLogs = [];
+      try {
+        const { getOfflineLogs } = await import('@/utils/offline-db');
+        const allPending = await getOfflineLogs();
+        pendingLogs = allPending.filter(log => log.farm_id === farmId);
+      } catch (dbErr) {
+        console.error("Failed to read offline logs from IndexedDB:", dbErr);
+      }
+
+      const formattedApiLogs = [...apiLogs].reverse();
+      setLogs([...pendingLogs, ...formattedApiLogs]);
     } catch (error) {
       console.error("Error fetching logs:", error);
     } finally {
       setIsLoadingLogs(false);
     }
   };
+
+  // Background synchronization listener
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncOfflineQueue = async () => {
+      if (!activeFarm || !user) return;
+      try {
+        const { getOfflineLogs, deleteOfflineLog } = await import('@/utils/offline-db');
+        const allPending = await getOfflineLogs();
+        
+        if (allPending.length === 0) return;
+
+        console.log(`Auto-sync triggered! Syncing ${allPending.length} pending logs...`);
+        
+        for (const log of allPending) {
+          try {
+            // Strip client-side temp id, pendingSync, and createdAt before sending to API
+            const { id, pendingSync, createdAt, ...apiPayload } = log;
+            await createActivityLog(apiPayload, user.token);
+            // Delete from IndexedDB upon successful upload
+            await deleteOfflineLog(id);
+          } catch (err) {
+            console.error(`Failed to sync offline log with ID ${log.id}:`, err);
+          }
+        }
+
+        // Refresh lists
+        if (activeFarm) {
+          fetchLogsData(activeFarm.farm_id);
+        }
+      } catch (err) {
+        console.error("Sync error:", err);
+      }
+    };
+
+    window.addEventListener('online', syncOfflineQueue);
+    
+    // Trigger sync immediately if online
+    if (navigator.onLine) {
+      syncOfflineQueue();
+    }
+
+    return () => {
+      window.removeEventListener('online', syncOfflineQueue);
+    };
+  }, [activeFarm?.farm_id, user]);
 
   // 3. Auth Check Route Protection
   useEffect(() => {
@@ -128,7 +193,16 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSubmitActivity = async (formData) => {
+  const handleSubmitActivity = async (formData, isOffline = false) => {
+    if (isOffline) {
+      setShowRecordModal(false);
+      setEditingLog(null);
+      if (activeFarm) {
+        fetchLogsData(activeFarm.farm_id);
+      }
+      return;
+    }
+
     try {
       if (editingLog) {
         await updateActivityLog(editingLog.log_id, formData, user.token);

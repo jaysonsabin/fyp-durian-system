@@ -6,3 +6,10 @@ env/
 __pycache__/
 # Ignore environment variables
 .env
+# PWA compiler artifacts
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/ts-to-js-extension-*.js
+/public/ts-to-js-extension-*.js.map

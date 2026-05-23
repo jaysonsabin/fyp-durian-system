@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { Bot, Sparkles, Thermometer, Droplets, Beaker, Sprout, Brain, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/app/context/auth_context';

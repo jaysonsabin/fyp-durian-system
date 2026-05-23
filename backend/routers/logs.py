@@ -27,7 +27,26 @@ def create_activity_log(
         )
 
     # 3. If ownership is verified, cleanly map data fields and commit to table
-    new_log = models.ActivityLog(**log_data.model_dump())
+    log_dict = log_data.model_dump()
+    
+    # Auto-enrich weather metrics retrospectively if they were submitted as offline placeholders (0.0)
+    if (log_dict.get("temperature") == 0.0 and log_dict.get("rainfall") == 0.0) or \
+       (log_dict.get("temperature") is None and log_dict.get("rainfall") is None):
+        if target_farm.latitude is not None and target_farm.longitude is not None:
+            try:
+                from services.weather import fetch_current_weather
+                weather = fetch_current_weather(target_farm.latitude, target_farm.longitude)
+                log_dict["temperature"] = weather.get("temperature", 28.5)
+                log_dict["rainfall"] = weather.get("rainfall", 0.0)
+            except Exception as e:
+                # Fallback to standard defaults on error
+                log_dict["temperature"] = 28.5
+                log_dict["rainfall"] = 0.0
+        else:
+            log_dict["temperature"] = 28.5
+            log_dict["rainfall"] = 0.0
+
+    new_log = models.ActivityLog(**log_dict)
     db.add(new_log)
     db.commit()
     db.refresh(new_log)
