@@ -13,6 +13,12 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "postgresql+psycopg://postgres:postgres@localhost:5432/durian_db"
 )
 
+# Automatically normalize protocol prefix to force modern psycopg (v3) dialect
+if SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+elif SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+
 # 2. The Engine: The actual connection to the database
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
