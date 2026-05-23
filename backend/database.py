@@ -20,7 +20,10 @@ elif SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
 
 # 2. The Engine: The actual connection to the database
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"prepare_threshold": None}
+)
 
 # 3. The Session: This is what you'll use to talk to the DB (Save/Delete/Query)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
