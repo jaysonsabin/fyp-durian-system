@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -49,12 +50,13 @@ def login(
         }
     )
     
-    # 1. Attach the token as a cookie
+    # 1. Attach the token as a cookie dynamically
+    is_production = os.getenv("ENVIRONMENT") == "production"
     response.set_cookie(
         key="durian_token",
         value=token,
         httponly=True,      # Crucial: Hides cookie from JavaScript (XSS safe)
-        secure=False,       # Crucial: Only sends cookie over HTTPS (set False only for localhost HTTP testing)
+        secure=is_production, # Enforce HTTPS only in production
         samesite="lax",     # Protects against CSRF attacks
         max_age=3600,       # Expires cookie after 1 hour (in seconds)
         path="/"            # Cookie is valid for all routes on our domain
@@ -85,8 +87,15 @@ def register_admin(admin_data: schemas.UserCreate, db: Session = Depends(get_db)
 
 @router.post("/logout")
 def logout(response: Response):
-    # Overwrite the cookie with an expired date to clear it
-    response.delete_cookie(key="durian_token", path="/")
+    # Overwrite the cookie with an expired date to clear it securely
+    is_production = os.getenv("ENVIRONMENT") == "production"
+    response.delete_cookie(
+        key="durian_token", 
+        path="/", 
+        httponly=True, 
+        secure=is_production, 
+        samesite="lax"
+    )
     return {"message": "Successfully logged out"}
 
 @router.get("/auth/me")

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from typing import List
 import models, schemas, database, security
 
+import os
+
 from database import engine
 from dependencies.db import get_db
 
@@ -20,17 +22,24 @@ from routers import weather
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Durian Farm Management System")
 
-# Middlewares
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# Configure dynamic allowed CORS origins
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_str:
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+else:
+    allowed_origins = [
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002"
-    ],
+    ]
+
+# Middlewares
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
     allow_headers=["Content-Type", "Authorization"],

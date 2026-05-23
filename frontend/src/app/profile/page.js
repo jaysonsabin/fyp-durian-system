@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { updateFarm, deleteFarm } from '@/services/dashboard';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -90,7 +92,7 @@ export default function ProfilePage() {
   const fetchFarms = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`http://localhost:8001/farms/${user.id}`, {
+      const response = await fetch(`${API_BASE}/farms/${user.id}`, {
         credentials: "include"
       });
       if (response.ok) {
@@ -106,7 +108,7 @@ export default function ProfilePage() {
   const fetchUserProfile = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`http://localhost:8001/users/${user.id}/profile`, {
+      const response = await fetch(`${API_BASE}/users/${user.id}/profile`, {
         credentials: "include"
       });
       if (response.ok) {
@@ -146,7 +148,7 @@ export default function ProfilePage() {
     setIsSavingProfile(true);
     
     try {
-      const response = await fetch(`http://localhost:8001/users/${user.id}/profile`, {
+      const response = await fetch(`${API_BASE}/users/${user.id}/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -177,7 +179,7 @@ export default function ProfilePage() {
     setIsAddingFarm(true);
 
     try {
-      const response = await fetch("http://localhost:8001/farms", {
+      const response = await fetch(`${API_BASE}/farms`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

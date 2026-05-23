@@ -2,6 +2,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -13,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await fetch("http://localhost:8001/auth/me", {
+        const response = await fetch(`${API_BASE}/auth/me`, {
           credentials: "include"
         });
         if (response.ok) {
@@ -54,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   // 3. Global Logout Function
   const logout = async () => {
     try {
-      await fetch("http://localhost:8001/logout", {
+      await fetch(`${API_BASE}/logout`, {
         method: "POST",
         credentials: "include"
       });

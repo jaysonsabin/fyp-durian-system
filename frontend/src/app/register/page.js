@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+
 export default function RegisterPage() {
   const router = useRouter();
   
@@ -33,7 +35,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8001/register/farmer", {
+      const response = await fetch(`${API_BASE}/register/farmer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Notice we are automatically assigning the "Pengusaha" (Farmer) role here!

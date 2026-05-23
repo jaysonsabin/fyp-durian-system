@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/auth_context'; // 1. Import your global auth hook
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth(); // 2. Pull the global login action
@@ -23,7 +25,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch("http://localhost:8001/login", {
+      const response = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
