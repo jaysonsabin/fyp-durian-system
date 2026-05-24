@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/context/auth_context';
 import CustomSelect from '@/app/components/custom-select';
+import { uploadForumImage } from '@/services/storage';
 
 const forumTagOptions = [
   { value: "General", label: "General"},
@@ -42,8 +43,9 @@ export default function Forum() {
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostTag, setNewPostTag] = useState("General");
-  const [newPostImageUrl, setNewPostImageUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Edit Post modal states
   const [editingPost, setEditingPost] = useState(null);
@@ -51,6 +53,8 @@ export default function Forum() {
   const [editContent, setEditContent] = useState("");
   const [editTag, setEditTag] = useState("General");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editSelectedFile, setEditSelectedFile] = useState(null);
+  const [isSavingPost, setIsSavingPost] = useState(false);
 
   // Replies states
   const [expandedPostId, setExpandedPostId] = useState(null);
@@ -80,16 +84,32 @@ export default function Forum() {
     if (!user) return;
 
     setIsPosting(true);
+    let finalImageUrl = null;
+    if (selectedFile) {
+      setIsUploadingImage(true);
+      try {
+        finalImageUrl = await uploadForumImage(selectedFile);
+      } catch (err) {
+        console.error("Image upload failed:", err);
+        alert("Failed to upload image: " + err.message);
+        setIsPosting(false);
+        setIsUploadingImage(false);
+        return;
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+
     try {
       await createForumPost({
         title: newPostTitle,
         content: newPostContent,
         tag: newPostTag,
-        image_url: newPostImageUrl.trim() || null
+        image_url: finalImageUrl
       }, user.token);
       setNewPostTitle("");
       setNewPostContent("");
-      setNewPostImageUrl("");
+      setSelectedFile(null);
       setNewPostTag("General");
       loadPosts();
     } catch (err) {
@@ -106,6 +126,12 @@ export default function Forum() {
     setEditContent(post.content);
     setEditTag(post.tag);
     setEditImageUrl(post.image_url || "");
+    setEditSelectedFile(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPost(null);
+    setEditSelectedFile(null);
   };
 
   const handleSavePost = async (e) => {
@@ -113,18 +139,26 @@ export default function Forum() {
     if (!editTitle.trim() || !editContent.trim()) return;
     if (!user) return;
 
+    setIsSavingPost(true);
     try {
+      let finalImageUrl = editImageUrl.trim() || null;
+      if (editSelectedFile) {
+        finalImageUrl = await uploadForumImage(editSelectedFile);
+      }
       await updateForumPost(editingPost.post_id, {
         title: editTitle,
         content: editContent,
         tag: editTag,
-        image_url: editImageUrl.trim() || null
+        image_url: finalImageUrl
       }, user.token);
       setEditingPost(null);
+      setEditSelectedFile(null);
       loadPosts();
     } catch (err) {
       console.error("Failed to update post:", err);
-      alert("Failed to update discussion.");
+      alert("Failed to update discussion: " + err.message);
+    } finally {
+      setIsSavingPost(false);
     }
   };
 
@@ -281,44 +315,77 @@ export default function Forum() {
               required
               className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all resize-none"
             ></textarea>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Optional image URL (e.g. http://...)"
-                value={newPostImageUrl}
-                onChange={(e) => setNewPostImageUrl(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all pl-9"
-              />
-              <Image size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
+            {selectedFile && (
+              <div className="relative inline-block mt-2 rounded-2xl overflow-hidden border border-gray-200 shadow-sm max-w-xs animate-in fade-in duration-200">
+                <img 
+                  src={URL.createObjectURL(selectedFile)} 
+                  alt="Selected preview" 
+                  className="h-32 w-auto object-cover rounded-2xl" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedFile(null)}
+                  className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors cursor-pointer"
+                  title="Remove image"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
-              <span className="font-bold">Tag:</span>
-              <CustomSelect 
-                name="new_post_tag"
-                value={newPostTag}
-                onChange={(e) => setNewPostTag(e.target.value)}
-                options={forumTagOptions}
-                buttonClassName="bg-transparent outline-none font-bold text-green-700 cursor-pointer flex items-center gap-1 text-xs"
-                chevronSize={12}
-                containerClassName="inline-block"
-                menuClassName="absolute left-0 mt-2 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-[150] py-2 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 thin-scrollbar"
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
+                <span className="font-bold">Tag:</span>
+                <CustomSelect 
+                  name="new_post_tag"
+                  value={newPostTag}
+                  onChange={(e) => setNewPostTag(e.target.value)}
+                  options={forumTagOptions}
+                  buttonClassName="bg-transparent outline-none font-bold text-green-700 cursor-pointer flex items-center gap-1 text-xs"
+                  chevronSize={12}
+                  containerClassName="inline-block"
+                  menuClassName="absolute left-0 mt-2 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-[150] py-2 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 thin-scrollbar"
+                />
+              </div>
+
+              <label 
+                htmlFor="new-post-image-upload" 
+                className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-xs font-bold border border-gray-200 cursor-pointer transition-colors active:scale-95 duration-150"
+              >
+                <Image size={12} className="text-gray-500" />
+                <span>Attach Image</span>
+              </label>
+              <input
+                id="new-post-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setSelectedFile(e.target.files[0]);
+                  }
+                }}
+                className="hidden"
               />
             </div>
             
             <button 
               type="submit" 
-              disabled={isPosting || !newPostContent.trim() || !newPostTitle.trim()}
+              disabled={isPosting || isUploadingImage || !newPostContent.trim() || !newPostTitle.trim()}
               className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-5 py-2.5 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {isPosting ? (
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              {isPosting || isUploadingImage ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <span>{isUploadingImage ? "UPLOADING..." : "POSTING..."}</span>
+                </>
               ) : (
-                <Send size={12} />
+                <>
+                  <Send size={12} />
+                  <span>POST</span>
+                </>
               )}
-              <span>POST</span>
             </button>
           </div>
         </form>
@@ -652,7 +719,7 @@ export default function Forum() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-extrabold text-lg text-gray-800">Edit Discussion</h3>
               <button 
-                onClick={() => setEditingPost(null)}
+                onClick={handleCancelEdit}
                 className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
               >
                 <X size={16} />
@@ -685,14 +752,62 @@ export default function Forum() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Optional Image URL</label>
-                <input
-                  type="text"
-                  placeholder="Image URL..."
-                  value={editImageUrl}
-                  onChange={(e) => setEditImageUrl(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
-                />
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Discussion Image</label>
+                
+                {editSelectedFile ? (
+                  <div className="relative inline-block mt-1 rounded-2xl overflow-hidden border border-gray-200 shadow-sm max-w-xs animate-in fade-in duration-200">
+                    <img 
+                      src={URL.createObjectURL(editSelectedFile)} 
+                      alt="New selected preview" 
+                      className="h-32 w-auto object-cover rounded-2xl" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEditSelectedFile(null)}
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors cursor-pointer"
+                      title="Remove selected image"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : editImageUrl ? (
+                  <div className="relative inline-block mt-1 rounded-2xl overflow-hidden border border-gray-200 shadow-sm max-w-xs">
+                    <img 
+                      src={editImageUrl} 
+                      alt="Existing discussion image" 
+                      className="h-32 w-auto object-cover rounded-2xl" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEditImageUrl("")}
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors cursor-pointer shadow-md"
+                      title="Remove image"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <label 
+                      htmlFor="edit-post-image-upload" 
+                      className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-xs font-bold border border-gray-200 cursor-pointer transition-colors active:scale-95 duration-150"
+                    >
+                      <Image size={14} className="text-gray-500" />
+                      <span>Choose Image from Library</span>
+                    </label>
+                    <input
+                      id="edit-post-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setEditSelectedFile(e.target.files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center pt-2">
@@ -713,16 +828,24 @@ export default function Forum() {
                 <div className="flex items-center gap-2">
                   <button 
                     type="button"
-                    onClick={() => setEditingPost(null)}
+                    onClick={handleCancelEdit}
                     className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
                   >
                     CANCEL
                   </button>
                   <button 
                     type="submit" 
-                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-5 py-2.5 text-xs font-bold shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
+                    disabled={isSavingPost || !editTitle.trim() || !editContent.trim()}
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-5 py-2.5 text-xs font-bold shadow-md shadow-green-600/10 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
                   >
-                    SAVE CHANGES
+                    {isSavingPost ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span>SAVING...</span>
+                      </>
+                    ) : (
+                      <span>SAVE CHANGES</span>
+                    )}
                   </button>
                 </div>
               </div>
