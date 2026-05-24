@@ -539,8 +539,8 @@ export default function Forum() {
                   <p className="text-sm text-gray-600 leading-relaxed font-normal whitespace-pre-wrap">{post.content}</p>
                   
                   {post.image_url && (
-                    <div className="relative rounded-2xl overflow-hidden max-h-64 mt-2 border border-gray-50 shadow-inner">
-                      <img src={post.image_url} alt={post.title} className="w-full h-full object-cover max-h-64" />
+                    <div className="relative rounded-2xl overflow-hidden max-h-[400px] mt-2 border border-gray-100 bg-gray-50/50 flex items-center justify-center shadow-inner">
+                      <img src={post.image_url} alt={post.title} className="max-h-[400px] w-full object-contain rounded-2xl" />
                     </div>
                   )}
                 </div>
