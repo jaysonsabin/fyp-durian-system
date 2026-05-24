@@ -147,8 +147,10 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           console.error("Failed to save log offline:", dbErr);
           alert("Failed to save activity offline: " + dbErr.message);
         } finally {
-          submittingRef.current = false;
-          setIsSubmitting(false);
+          setTimeout(() => {
+            submittingRef.current = false;
+            setIsSubmitting(false);
+          }, 1000);
         }
         return;
       }
@@ -168,8 +170,10 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
     } catch (error) {
       console.error(error);
     } finally {
-      submittingRef.current = false;
-      setIsSubmitting(false);
+      setTimeout(() => {
+        submittingRef.current = false;
+        setIsSubmitting(false);
+      }, 1000);
     }
   };
 

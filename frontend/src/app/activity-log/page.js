@@ -96,6 +96,7 @@ export default function DashboardPage() {
         const { getOfflineLogs } = await import('@/utils/offline-db');
         const allPending = await getOfflineLogs();
         pendingLogs = allPending.filter(log => log.farm_id === farmId);
+        console.log(`[IndexedDB] Loaded ${pendingLogs.length} pending logs for farm ${farmId}:`, pendingLogs);
       } catch (dbErr) {
         console.error("Failed to read offline logs from IndexedDB:", dbErr);
       }

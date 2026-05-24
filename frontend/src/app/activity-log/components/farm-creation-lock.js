@@ -17,8 +17,10 @@ export default function FarmCreationLock({ onAddFarm, onLogout }) {
     } catch (error) {
       console.error(error);
     } finally {
-      submittingRef.current = false;
-      setIsSubmitting(false);
+      setTimeout(() => {
+        submittingRef.current = false;
+        setIsSubmitting(false);
+      }, 1000);
     }
   };
 
