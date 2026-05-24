@@ -26,7 +26,24 @@ def create_activity_log(
             detail="Access Denied. You do not own this plantation partition."
         )
 
-    # 3. If ownership is verified, cleanly map data fields and commit to table
+    # 3. Deduplication Check: Prevent duplicate submissions created within a short time window (e.g., 30 seconds)
+    from sqlalchemy import func, text
+    recent_duplicate = db.query(models.ActivityLog).filter(
+        models.ActivityLog.farm_id == log_data.farm_id,
+        models.ActivityLog.activity_type == log_data.activity_type,
+        models.ActivityLog.fertilizer_type == log_data.fertilizer_type,
+        models.ActivityLog.fertilizer_amount == float(log_data.fertilizer_amount),
+        models.ActivityLog.pest_control == log_data.pest_control,
+        models.ActivityLog.soil_ph == float(log_data.soil_ph),
+        models.ActivityLog.remarks == log_data.remarks,
+        models.ActivityLog.log_date >= (func.now() - text("interval '30 seconds'"))
+    ).first()
+
+    if recent_duplicate:
+        print(f"[Deduplication] Duplicate log detected! Returning existing log_id: {recent_duplicate.log_id}")
+        return recent_duplicate
+
+    # 4. If ownership and uniqueness are verified, cleanly map data fields and commit to table
     log_dict = log_data.model_dump()
     
     # Auto-enrich weather metrics retrospectively if they were submitted as offline placeholders (0.0)
