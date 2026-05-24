@@ -99,6 +99,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const payload = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from 'lucide-react';
 import CustomSelect from '@/app/components/custom-select';
@@ -47,6 +47,7 @@ export default function DashboardPage() {
   const [activeFarm, setActiveFarm] = useState(null);
   const [logs, setLogs] = useState([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const isSyncingRef = useRef(false);
 
   // 1. Fetch user farms
   const fetchFarmsData = async () => {
@@ -113,12 +114,18 @@ export default function DashboardPage() {
     if (typeof window === 'undefined') return;
 
     const syncOfflineQueue = async () => {
+      if (isSyncingRef.current) return;
       if (!activeFarm || !user) return;
+      
+      isSyncingRef.current = true;
       try {
         const { getOfflineLogs, deleteOfflineLog } = await import('@/utils/offline-db');
         const allPending = await getOfflineLogs();
         
-        if (allPending.length === 0) return;
+        if (allPending.length === 0) {
+          isSyncingRef.current = false;
+          return;
+        }
 
         console.log(`Auto-sync triggered! Syncing ${allPending.length} pending logs...`);
         
@@ -140,6 +147,8 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error("Sync error:", err);
+      } finally {
+        isSyncingRef.current = false;
       }
     };
 
