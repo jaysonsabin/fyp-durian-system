@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Info, Beaker, Thermometer, Droplets, Bot, Save } from 'lucide-react';
 import { fetchCurrentWeather } from '@/services/dashboard';
 import CustomSelect from '@/app/components/custom-select';
@@ -39,6 +39,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
 
   useEffect(() => {
@@ -99,7 +100,8 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const payload = {
@@ -145,6 +147,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           console.error("Failed to save log offline:", dbErr);
           alert("Failed to save activity offline: " + dbErr.message);
         } finally {
+          submittingRef.current = false;
           setIsSubmitting(false);
         }
         return;
@@ -165,6 +168,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
     } catch (error) {
       console.error(error);
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };

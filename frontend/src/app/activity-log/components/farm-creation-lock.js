@@ -1,19 +1,23 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 
 export default function FarmCreationLock({ onAddFarm, onLogout }) {
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       await onAddFarm(farmName, farmLocation);
     } catch (error) {
       console.error(error);
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
