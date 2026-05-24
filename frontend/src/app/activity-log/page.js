@@ -120,31 +120,44 @@ export default function DashboardPage() {
       
       isSyncingRef.current = true;
       try {
-        const { getOfflineLogs, deleteOfflineLog } = await import('@/utils/offline-db');
-        const allPending = await getOfflineLogs();
-        
-        if (allPending.length === 0) {
-          isSyncingRef.current = false;
-          return;
-        }
-
-        console.log(`Auto-sync triggered! Syncing ${allPending.length} pending logs...`);
-        
-        for (const log of allPending) {
-          try {
-            // Strip client-side temp id, pendingSync, and createdAt before sending to API
-            const { id, pendingSync, createdAt, ...apiPayload } = log;
-            await createActivityLog(apiPayload, user.token);
-            // Delete from IndexedDB upon successful upload
-            await deleteOfflineLog(id);
-          } catch (err) {
-            console.error(`Failed to sync offline log with ID ${log.id}:`, err);
+        const performSync = async () => {
+          const { getOfflineLogs, deleteOfflineLog } = await import('@/utils/offline-db');
+          const allPending = await getOfflineLogs();
+          
+          if (allPending.length === 0) {
+            return;
           }
-        }
 
-        // Refresh lists
-        if (activeFarm) {
-          fetchLogsData(activeFarm.farm_id);
+          console.log(`Auto-sync triggered! Syncing ${allPending.length} pending logs...`);
+          
+          for (const log of allPending) {
+            try {
+              // Strip client-side temp id, pendingSync, and createdAt before sending to API
+              const { id, pendingSync, createdAt, ...apiPayload } = log;
+              await createActivityLog(apiPayload, user.token);
+              // Delete from IndexedDB upon successful upload
+              await deleteOfflineLog(id);
+            } catch (err) {
+              console.error(`Failed to sync offline log with ID ${log.id}:`, err);
+            }
+          }
+
+          // Refresh lists
+          if (activeFarm) {
+            fetchLogsData(activeFarm.farm_id);
+          }
+        };
+
+        if (typeof navigator !== 'undefined' && navigator.locks) {
+          await navigator.locks.request('sync_offline_logs_lock', { ifAvailable: true }, async (lock) => {
+            if (!lock) {
+              console.log("[Sync] Another instance or tab is already syncing. Aborting sync.");
+              return;
+            }
+            await performSync();
+          });
+        } else {
+          await performSync();
         }
       } catch (err) {
         console.error("Sync error:", err);
