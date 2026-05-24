@@ -334,8 +334,8 @@ export default function Forum() {
             )}
           </div>
           
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-3 justify-between sm:items-center">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
                 <span className="font-bold">Tag:</span>
                 <CustomSelect 
@@ -373,7 +373,7 @@ export default function Forum() {
             <button 
               type="submit" 
               disabled={isPosting || isUploadingImage || !newPostContent.trim() || !newPostTitle.trim()}
-              className="bg-green-600 hover:bg-green-700 text-white rounded-2xl px-5 py-2.5 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white rounded-2xl px-5 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isPosting || isUploadingImage ? (
                 <>
