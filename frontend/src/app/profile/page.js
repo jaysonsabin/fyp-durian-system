@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/auth_context';
+import { useLanguage } from '@/app/context/language_context';
 import { 
   ArrowLeft, User, MapPin, Save, Plus, 
   Home, Sprout, ShieldCheck, Edit2, Trash2, Check, X 
@@ -13,6 +14,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
 
   // -- UI States --
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -57,7 +59,7 @@ export default function ProfilePage() {
 
   const handleSaveFarm = async (farmId) => {
     if (!editFarmData.farm_name.trim() || !editFarmData.farm_location.trim()) {
-      alert("Farm name and location cannot be empty.");
+      alert(t('alert_farm_fields_empty'));
       return;
     }
     setIsUpdatingFarm(true);
@@ -65,25 +67,25 @@ export default function ProfilePage() {
       await updateFarm(farmId, editFarmData, user.token);
       setEditingFarmId(null);
       fetchFarms();
-      alert("Plantation updated successfully!");
+      alert(t('alert_farm_updated'));
     } catch (error) {
       console.error("Error updating farm:", error);
-      alert("Failed to update plantation details.");
+      alert(t('alert_farm_update_failed'));
     } finally {
       setIsUpdatingFarm(false);
     }
   };
 
   const handleDeleteFarm = async (farmId) => {
-    const message = "WARNING: Deleting this plantation will permanently erase the farm and ALL associated activity records. This action cannot be undone.\n\nAre you sure you want to proceed?";
+    const message = t('confirm_delete_farm');
     if (window.confirm(message)) {
       try {
         await deleteFarm(farmId, user.token);
         fetchFarms();
-        alert("Plantation and all its records deleted successfully.");
+        alert(t('alert_farm_deleted'));
       } catch (error) {
         console.error("Error deleting farm:", error);
-        alert("Failed to delete plantation.");
+        alert(t('alert_farm_delete_failed'));
       }
     }
   };
@@ -161,13 +163,13 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        alert("Profile details synchronized successfully!");
+        alert(t('alert_profile_synced'));
       } else {
-        alert("Failed to update profile records on backend.");
+        alert(t('alert_profile_sync_failed'));
       }
     } catch (error) {
       console.error("Network error saving profile:", error);
-      alert("Cannot connect to server.");
+      alert(t('alert_cannot_connect'));
     } finally {
       setIsSavingProfile(false);
     }
@@ -195,9 +197,9 @@ export default function ProfilePage() {
       if (response.ok) {
         setNewFarmData({ farm_name: '', farm_location: '' });
         fetchFarms(); 
-        alert("New plantation added successfully!");
+        alert(t('alert_farm_added'));
       } else {
-        alert("Failed to add farm.");
+        alert(t('alert_farm_add_failed'));
       }
     } catch (error) {
       console.error("Network error:", error);
@@ -218,7 +220,7 @@ export default function ProfilePage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-xl font-bold text-gray-800">Account Settings</h2>
+        <h2 className="text-xl font-bold text-gray-800">{t('account_settings')}</h2>
       </header>
 
       <main className="max-w-3xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -230,8 +232,8 @@ export default function ProfilePage() {
               <Sprout size={22} />
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">My Plantations</span>
-              <span className="text-lg font-black text-gray-800">{farms.length} Active</span>
+              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('my_plantations')}</span>
+              <span className="text-lg font-black text-gray-800">{farms.length} {t('active')}</span>
             </div>
           </div>
 
@@ -240,8 +242,8 @@ export default function ProfilePage() {
               <ShieldCheck size={22} />
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Account Status</span>
-              <span className="text-lg font-black text-gray-800">{user?.role === 'Pentadbir' ? 'Administrator' : 'Verified Farmer'}</span>
+              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('account')}</span>
+              <span className="text-lg font-black text-gray-800">{user?.role === 'Pentadbir' ? t('admin_status') : t('verified_grower')}</span>
             </div>
           </div>
         </div>
@@ -253,14 +255,14 @@ export default function ProfilePage() {
               <User size={22} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800">Personal Details</h3>
-              <p className="text-sm text-gray-500">Update your farmer profile</p>
+              <h3 className="text-xl font-bold text-gray-800">{t('personal_details')}</h3>
+              <p className="text-sm text-gray-500">{t('update_profile')}</p>
             </div>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase ml-2 mb-2">Full Name</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase ml-2 mb-2">{t('fullname_label')}</label>
               <input 
                 type="text" 
                 name="full_name"
@@ -272,7 +274,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase ml-2 mb-2">Home Address</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase ml-2 mb-2">{t('address_label')}</label>
               <textarea 
                 name="address"
                 value={profileData.address}
@@ -292,7 +294,7 @@ export default function ProfilePage() {
                   : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
               }`}
             >
-              {isSavingProfile ? "SAVING..." : "SAVE CHANGES"}
+              {isSavingProfile ? t('saving') : t('save_changes')}
             </button>
           </form>
         </section>
@@ -305,19 +307,19 @@ export default function ProfilePage() {
                 <Sprout size={22} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">My Plantations</h3>
-                <p className="text-sm text-gray-500">Manage your farm locations</p>
+                <h3 className="text-xl font-bold text-gray-800">{t('my_plantations')}</h3>
+                <p className="text-sm text-gray-500">{t('manage_locations')}</p>
               </div>
             </div>
             <div className="bg-green-50 text-green-700 px-3 py-1 rounded-lg font-bold text-sm">
-              {farms.length} Registered
+              {farms.length} {t('registered')}
             </div>
           </div>
 
           <div className="space-y-3 mb-8">
             {farms.length === 0 ? (
               <div className="text-center p-6 bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-400 text-sm font-medium">
-                No plantations found. Add one below.
+                {t('no_plantations')}
               </div>
             ) : (
               farms.map((farm) => {
@@ -338,7 +340,7 @@ export default function ProfilePage() {
                           name="farm_name"
                           value={editFarmData.farm_name}
                           onChange={handleEditFarmChange}
-                          placeholder="Plantation Name"
+                          placeholder={t('plantation_name')}
                           className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
                         />
                         <input
@@ -346,7 +348,7 @@ export default function ProfilePage() {
                           name="farm_location"
                           value={editFarmData.farm_location}
                           onChange={handleEditFarmChange}
-                          placeholder="Location / Region"
+                          placeholder={t('location_region')}
                           className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
                         />
                       </div>
@@ -377,14 +379,14 @@ export default function ProfilePage() {
                             onClick={() => handleSaveFarm(farm.farm_id)}
                             disabled={isUpdatingFarm}
                             className="p-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
-                            title="Save changes"
+                            title={t('save_changes')}
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={handleCancelEditFarm}
                             className="p-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
-                            title="Cancel"
+                            title={t('cancel')}
                           >
                             <X size={16} />
                           </button>
@@ -394,14 +396,14 @@ export default function ProfilePage() {
                           <button
                             onClick={() => handleStartEditFarm(farm)}
                             className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-green-50 hover:text-green-600 transition-colors cursor-pointer"
-                            title="Edit Plantation"
+                            title={t('edit_plantation')}
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteFarm(farm.farm_id)}
                             className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-                            title="Delete Plantation"
+                            title={t('delete_plantation')}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -417,7 +419,7 @@ export default function ProfilePage() {
           <div className="pt-6 border-t border-gray-100">
             <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <Plus size={18} className="text-green-500" />
-              Register New Farm
+              {t('register_new_farm')}
             </h4>
             <form onSubmit={handleAddFarm} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -426,7 +428,7 @@ export default function ProfilePage() {
                   name="farm_name"
                   value={newFarmData.farm_name}
                   onChange={handleFarmChange}
-                  placeholder="Farm Name"
+                  placeholder={t('plantation_name')}
                   required
                   className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
                 />
@@ -435,7 +437,7 @@ export default function ProfilePage() {
                   name="farm_location"
                   value={newFarmData.farm_location}
                   onChange={handleFarmChange}
-                  placeholder="City / Region"
+                  placeholder={t('location_region')}
                   required
                   className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
                 />
@@ -445,7 +447,7 @@ export default function ProfilePage() {
                 disabled={isAddingFarm}
                 className={`w-full text-white py-4 rounded-2xl font-bold shadow-md transition-all ${isAddingFarm ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
               >
-                {isAddingFarm ? "ADDING..." : "ADD PLANTATION"}
+                {isAddingFarm ? t('adding') : t('add_plantation')}
               </button>
             </form>
           </div>

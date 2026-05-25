@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react';
 import { MapPin } from 'lucide-react';
+import { useLanguage } from '@/app/context/language_context';
 
 export default function FarmCreationLock({ onAddFarm, onLogout }) {
+  const { t } = useLanguage();
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,17 +36,17 @@ export default function FarmCreationLock({ onAddFarm, onLogout }) {
         <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
           <MapPin size={36} />
         </div>
-        <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Welcome to DurianFlow!</h2>
+        <h2 className="text-2xl font-extrabold text-gray-800 mb-2">{t('welcome_title')}</h2>
         <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-          Before you can track activities or predict yields, you need to register your first plantation location.
+          {t('welcome_desc')}
         </p>
         
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Plantation Name</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">{t('plantation_name')}</label>
             <input 
               type="text" 
-              placeholder="e.g., Raub Orchard"
+              placeholder={t('placeholder_farm_name')}
               required
               className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 font-medium transition-all"
               value={farmName}
@@ -53,10 +55,10 @@ export default function FarmCreationLock({ onAddFarm, onLogout }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Location</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">{t('location_region')}</label>
             <input 
               type="text" 
-              placeholder="e.g., Pahang, Malaysia"
+              placeholder={t('placeholder_farm_location')}
               required
               className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 font-medium transition-all"
               value={farmLocation}
@@ -73,7 +75,7 @@ export default function FarmCreationLock({ onAddFarm, onLogout }) {
                 : 'bg-green-600 hover:bg-green-700 hover:shadow-xl hover:shadow-green-600/20 active:scale-[0.98]'
             }`}
           >
-            {isSubmitting ? "INITIALIZING..." : "CREATE MY FIRST FARM"}
+            {isSubmitting ? t('initializing') : t('create_first_farm')}
           </button>
         </form>
         
@@ -81,7 +83,7 @@ export default function FarmCreationLock({ onAddFarm, onLogout }) {
           onClick={onLogout} 
           className="mt-6 text-sm font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-wider text-[11px]"
         >
-          Log Out
+          {t('sign_out')}
         </button>
       </div>
     </div>

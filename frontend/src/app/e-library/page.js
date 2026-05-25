@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { BookOpen, FileText, Video, ExternalLink, Search, X, Heart, Bookmark, Download, Edit2, Trash2, Plus } from "lucide-react";
 import { useAuth } from "@/app/context/auth_context";
 import CustomSelect from "@/app/components/custom-select";
+import { useLanguage } from "@/app/context/language_context";
 
 const resourceTypeOptions = [
-  { value: "PDF", label: "PDF Guide", emoji: "📄" },
-  { value: "Video", label: "Video Tutorial", emoji: "🎥" }
+  { value: "PDF", label: "PDF Guide"},
+  { value: "Video", label: "Video Tutorial"}
 ];
-
 
 import {
   fetchLibraryContents,
@@ -21,6 +21,7 @@ import {
 } from "@/services/library";
 
 export default function Library() {
+  const { t } = useLanguage();
   const [contents, setContents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,7 +90,7 @@ export default function Library() {
 
   const handleResourceClick = async (content) => {
     if (!content.media_url) {
-      alert("No file linked to this resource.");
+      alert(t('no_file_linked'));
       return;
     }
 
@@ -121,7 +122,7 @@ export default function Library() {
     e.stopPropagation();
     if (!user) return;
     if (user.role === "Pentadbir") {
-      alert("Administrators cannot like resources.");
+      alert(t('admin_like_alert'));
       return;
     }
 
@@ -172,7 +173,7 @@ export default function Library() {
     e.stopPropagation();
     if (!user) return;
     if (user.role === "Pentadbir") {
-      alert("Administrators cannot bookmark resources.");
+      alert(t('admin_bookmark_alert'));
       return;
     }
 
@@ -222,7 +223,7 @@ export default function Library() {
   const handleDownload = async (content, e) => {
     e.stopPropagation();
     if (!content.media_url) {
-      alert("No file linked to this resource.");
+      alert(t('no_file_linked'));
       return;
     }
 
@@ -274,10 +275,10 @@ export default function Library() {
       resetForm();
       const data = await fetchLibraryContents();
       setContents(data);
-      alert("Resource uploaded successfully!");
+      alert(t('resource_uploaded'));
     } catch (err) {
       console.error(err);
-      alert("Failed to upload resource.");
+      alert(t('resource_upload_failed'));
     }
   };
 
@@ -298,27 +299,35 @@ export default function Library() {
       resetForm();
       const data = await fetchLibraryContents();
       setContents(data);
-      alert("Resource updated successfully!");
+      alert(t('resource_updated'));
     } catch (err) {
       console.error(err);
-      alert("Failed to update resource.");
+      alert(t('resource_update_failed'));
     }
   };
 
   const handleDeleteResource = async (contentId, e) => {
     e.stopPropagation();
     if (!user) return;
-    if (window.confirm("Are you sure you want to permanently delete this resource?")) {
+    if (window.confirm(t('confirm_delete_resource'))) {
       try {
         await deleteLibraryContent(contentId);
         const data = await fetchLibraryContents();
         setContents(data);
-        alert("Resource deleted successfully.");
+        alert(t('resource_deleted'));
       } catch (err) {
         console.error(err);
-        alert("Failed to delete resource.");
+        alert(t('resource_delete_failed'));
       }
     }
+  };
+
+  const translateCategory = (cat) => {
+    if (cat === "All") return t('tag_all');
+    if (cat === "General") return t('tag_general');
+    if (cat === "Fertilizer") return t('tag_fertilizer');
+    if (cat === "Soil") return t('tag_soil');
+    return cat;
   };
 
   const categories = ["All", ...new Set(contents.map((item) => item.category).filter(Boolean))];
@@ -334,6 +343,13 @@ export default function Library() {
     return matchesSearch && matchesCategory;
   });
 
+  const translatedResourceTypeOptions = resourceTypeOptions.map(opt => {
+    let label = opt.label;
+    if (opt.value === "PDF") label = t('pdf_guide');
+    else if (opt.value === "Video") label = t('video_tutorial');
+    return { ...opt, label };
+  });
+
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
@@ -341,15 +357,15 @@ export default function Library() {
       <div className="flex items-center justify-between h-14 relative">
         {!isSearchOpen ? (
           <div className="animate-in fade-in duration-200">
-            <h3 className="text-xl font-extrabold text-gray-800">eLibrary</h3>
-            <p className="text-xs text-gray-500">Official guidelines and resources</p>
+            <h3 className="text-xl font-extrabold text-gray-800">{t('elibrary_title')}</h3>
+            <p className="text-xs text-gray-500">{t('elibrary_subtitle')}</p>
           </div>
         ) : (
           <div className="flex-1 mr-2 animate-in slide-in-from-right-4 duration-200">
             <input
               type="text"
               autoFocus
-              placeholder="Search guides, videos, titles..."
+              placeholder={t('search_resources')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white px-4 py-2 text-sm text-gray-800 rounded-full border border-gray-200 shadow-sm outline-none focus:border-green-500 transition-all"
@@ -365,7 +381,7 @@ export default function Library() {
               className="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
             >
               <Plus size={14} />
-              <span>UPLOAD</span>
+              <span>{t('upload')}</span>
             </button>
           )}
 
@@ -399,7 +415,7 @@ export default function Library() {
                   : "bg-white border-gray-100 text-gray-500 hover:bg-gray-50"
               }`}
             >
-              {category}
+              {translateCategory(category)}
             </button>
           ))}
         </div>
@@ -409,7 +425,7 @@ export default function Library() {
       <div className="space-y-4 pb-20">
         {isLoading ? (
           <div className="text-center text-gray-400 py-10 font-bold animate-pulse">
-            Loading resources...
+            {t('loading_resources')}
           </div>
         ) : filteredContents.length === 0 ? (
           <EmptyState isFiltering={searchTerm !== "" || selectedCategory !== "All"} />
@@ -437,7 +453,7 @@ export default function Library() {
           <div className="bg-white rounded-[32px] w-full max-w-lg p-6 shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-extrabold text-lg text-gray-800">
-                {showUploadModal ? "Upload Resource" : "Edit Resource"}
+                {showUploadModal ? t('upload_resource') : t('edit_resource')}
               </h3>
               <button 
                 onClick={() => {
@@ -452,10 +468,10 @@ export default function Library() {
             
             <form onSubmit={showUploadModal ? handleUploadSubmit : handleEditSubmit} className="space-y-4 overflow-y-auto pr-1">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Title</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('discussion_title') || "Title"}</label>
                 <input
                   type="text"
-                  placeholder="Resource Title..."
+                  placeholder={t('title_placeholder')}
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   required
@@ -465,17 +481,17 @@ export default function Library() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Type</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('type_label')}</label>
                   <CustomSelect 
                     name="form_type"
                     value={formType}
                     onChange={(e) => setFormType(e.target.value)}
-                    options={resourceTypeOptions}
+                    options={translatedResourceTypeOptions}
                     buttonClassName="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white cursor-pointer flex items-center justify-between text-left"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Category</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('category_label')}</label>
                   <input
                     type="text"
                     placeholder="e.g. Soil, Fertilizer..."
@@ -488,9 +504,9 @@ export default function Library() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Description</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('description_label')}</label>
                 <textarea 
-                  placeholder="Brief description of this resource..."
+                  placeholder={t('description_label') + "..."}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   rows="3"
@@ -499,7 +515,7 @@ export default function Library() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Media URL (File link / YouTube link)</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('media_url_label')}</label>
                 <input
                   type="url"
                   placeholder="https://..."
@@ -511,7 +527,7 @@ export default function Library() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Publisher</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('publisher_label')}</label>
                 <input
                   type="text"
                   placeholder="e.g. MARDI, Department of Agriculture..."
@@ -530,13 +546,13 @@ export default function Library() {
                   }}
                   className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
                 >
-                  CANCEL
+                  {t('cancel')}
                 </button>
                 <button 
                   type="submit" 
                   className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-5 py-2.5 text-xs font-bold shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
                 >
-                  {showUploadModal ? "UPLOAD RESOURCE" : "SAVE CHANGES"}
+                  {showUploadModal ? t('upload_resource_btn') : t('save_changes')}
                 </button>
               </div>
             </form>
@@ -548,22 +564,24 @@ export default function Library() {
 }
 
 function EmptyState({ isFiltering }) {
+  const { t } = useLanguage();
   return (
     <div className="text-center text-gray-400 py-12 bg-white rounded-3xl border border-dashed border-gray-200 px-4">
       <BookOpen size={48} className="mx-auto mb-3 text-gray-300" />
       <p className="font-bold text-gray-700">
-        {isFiltering ? "No matching results found" : "No resources available"}
+        {isFiltering ? t('no_matching_results') : t('no_resources_available')}
       </p>
       <p className="text-xs mt-1 max-w-xs mx-auto">
         {isFiltering 
-          ? "Try adjusting your keywords or clearing your category filters." 
-          : "Check back later for newly published guides and media links!"}
+          ? t('empty_filtering_desc') 
+          : t('empty_no_resources_desc')}
       </p>
     </div>
   );
 }
 
 function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, isAdmin, onEdit, onDelete }) {
+  const { t } = useLanguage();
   const isVideo = item.type?.toLowerCase() === "video";
 
   // Safeguard date parsing to ensure any invalid payload values don't crash rendering
@@ -573,6 +591,13 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
     return isNaN(date.getTime())
       ? "Recent"
       : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const translateCategory = (cat) => {
+    if (cat === "General") return t('tag_general');
+    if (cat === "Fertilizer") return t('tag_fertilizer');
+    if (cat === "Soil") return t('tag_soil');
+    return cat;
   };
 
   const interactions = item.interactions || [];
@@ -602,7 +627,7 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
           <span className="text-[10px] font-extrabold text-green-600 uppercase tracking-wider truncate">
-            {item.category || "General"}
+            {translateCategory(item.category || "General")}
           </span>
 
           <span className="text-[10px] text-gray-400 flex-shrink-0">
@@ -623,11 +648,11 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50 flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-md max-w-[120px] truncate">
-              By {item.published_by || "System"}
+              {t('by_label')} {item.published_by || "System"}
             </span>
 
             <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 px-2 py-1 rounded-md">
-              {views.length} Views
+              {views.length} {t('views_count')}
             </span>
           </div>
 

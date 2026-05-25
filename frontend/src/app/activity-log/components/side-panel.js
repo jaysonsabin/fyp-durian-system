@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
-import { X, Settings, ChevronRight, LogOut } from 'lucide-react';
+import { X, Settings, ChevronRight, LogOut, Globe } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/app/context/language_context';
 
 export default function ProfilePanel({ isOpen, onClose, onLogout }) {
   const router = useRouter();
+  const { language, changeLanguage, t } = useLanguage();
   const [shouldRender, setShouldRender] = useState(isOpen);
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
     } else {
-      // Delay unmounting by 300ms to allow the exit animation to finish
       const timer = setTimeout(() => setShouldRender(false), 300);
       return () => clearTimeout(timer);
     }
@@ -38,7 +39,7 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
         
         {/* Panel Header */}
         <div className="p-6 flex justify-between items-center border-b border-gray-100">
-          <h3 className="font-bold text-lg text-gray-800">Account</h3>
+          <h3 className="font-bold text-lg text-gray-800">{t('account')}</h3>
           <button 
             onClick={onClose} 
             className="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition-colors"
@@ -48,7 +49,7 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
         </div>
         
         {/* Panel Links */}
-        <div className="p-4 flex-1 flex flex-col gap-2">
+        <div className="p-4 flex-1 flex flex-col gap-4">
           <button 
             onClick={() => {
               onClose();
@@ -57,23 +58,53 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
             className="flex items-center justify-between w-full p-4 rounded-2xl hover:bg-gray-50 text-left transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-blue-50 text-blue-500 p-2.5 rounded-xl group-hover:bg-blue-100 transition-colors">
+              <div className="bg-green-50 text-green-600 p-2.5 rounded-xl group-hover:bg-green-100 transition-colors">
                 <Settings size={18} />
               </div>
-              <span className="font-semibold text-gray-700">Edit Profile & Farms</span>
+              <span className="font-semibold text-gray-700">{t('edit_profile_farms')}</span>
             </div>
-            <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+            <ChevronRight size={18} className="text-gray-300 group-hover:text-green-600 transition-colors" />
           </button>
+
+          {/* Language Selector Block */}
+          <div className="border-t border-gray-100 pt-4 px-4 space-y-3">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Globe size={14} className="text-gray-400" />
+              <span>{t('language')}</span>
+            </span>
+            <div className="flex items-center bg-gray-100 p-1 rounded-xl">
+              <button
+                onClick={() => changeLanguage('ms')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  language === 'ms' 
+                    ? 'bg-green-600 text-white shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                🇲🇾 BM
+              </button>
+              <button
+                onClick={() => changeLanguage('en')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  language === 'en' 
+                    ? 'bg-green-600 text-white shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                🇬🇧 EN
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Logout Button */}
         <div className="p-6 border-t border-gray-100">
           <button 
             onClick={onLogout} 
-            className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-red-50 text-red-500 font-bold hover:bg-red-100 transition-colors"
+            className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-red-50 text-red-500 font-bold hover:bg-red-100 transition-colors cursor-pointer"
           >
             <LogOut size={18} />
-            Sign Out
+            {t('sign_out')}
           </button>
         </div>
         

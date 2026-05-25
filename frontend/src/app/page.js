@@ -2,13 +2,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/app/context/auth_context'; // 1. Import your global auth hook
+import { useAuth } from '@/app/context/auth_context';
+import { useLanguage } from '@/app/context/language_context';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth(); // 2. Pull the global login action
+  const { login } = useAuth();
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
@@ -38,14 +40,12 @@ export default function LoginPage() {
         const data = await response.json();
         login(data); 
       } else {
-        setError("Invalid username or password.");
+        setError(t('alert_invalid_login'));
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Cannot connect to the server.");
+      setError(t('alert_cannot_connect'));
     } finally {
-      // Note: We don't need to manually set isLoading to false if login succeeds,
-      // because AuthContext instantly moves us away to the dashboard page.
       setIsLoading(false);
     }
   };
@@ -58,8 +58,8 @@ export default function LoginPage() {
       ></div>
       
       <div className="relative bg-white pt-16 pb-12 px-10 rounded-[40px] w-[90%] max-w-[400px] text-center shadow-2xl">
-        <h1 className="text-5xl font-bold text-green-600 mb-3">DurianFlow</h1>
-        <p className="text-gray-500 font-light tracking-wide mb-8">Farm Management System</p>
+        <h1 className="text-5xl font-bold text-green-600 mb-3">{t('login_title')}</h1>
+        <p className="text-gray-500 font-light tracking-wide mb-8">{t('login_subtitle')}</p>
         
         {error && (
           <div className="mb-6 p-3 bg-red-50 text-red-500 text-sm rounded-xl font-medium border border-red-100">
@@ -74,7 +74,7 @@ export default function LoginPage() {
             value={formData.username}
             onChange={handleChange}
             className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500" 
-            placeholder="Username" 
+            placeholder={t('username')} 
             required 
           />
           <input 
@@ -83,7 +83,7 @@ export default function LoginPage() {
             value={formData.password}
             onChange={handleChange}
             className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500" 
-            placeholder="Password" 
+            placeholder={t('password')} 
             required 
           />
           <button 
@@ -91,13 +91,13 @@ export default function LoginPage() {
             disabled={isLoading}
             className={`w-full text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${isLoading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
           >
-            {isLoading ? "AUTHENTICATING..." : "LOG IN"}
+            {isLoading ? t('authenticating') : t('login_button')}
           </button>
         </form>
         <div className="mt-8 text-center text-sm text-gray-500">
-          Don't have an account?{' '}
+          {t('no_account')}{' '}
           <Link href="/register" className="text-green-600 font-bold hover:underline">
-            Sign up
+            {t('sign_up')}
           </Link>
         </div>
       </div>

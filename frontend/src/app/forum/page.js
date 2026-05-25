@@ -6,6 +6,7 @@ import {
   AlertTriangle, Edit2, Trash2, Check, X, Image, Lock, Unlock, Eye, EyeOff
 } from 'lucide-react';
 import { useAuth } from '@/app/context/auth_context';
+import { useLanguage } from '@/app/context/language_context';
 import CustomSelect from '@/app/components/custom-select';
 import { uploadForumImage } from '@/services/storage';
 
@@ -32,6 +33,16 @@ import {
 export default function Forum() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Pentadbir';
+  const { t } = useLanguage();
+
+  const translatedTagOptions = forumTagOptions.map(opt => {
+    let label = opt.label;
+    if (opt.value === "General") label = t('tag_general');
+    else if (opt.value === "Fertilizer") label = t('tag_fertilizer');
+    else if (opt.value === "Pest Alert") label = t('tag_pest_alert');
+    else if (opt.value === "Market Price") label = t('tag_market_price');
+    return { ...opt, label };
+  });
 
   // Feed states
   const [posts, setPosts] = useState([]);
@@ -91,7 +102,7 @@ export default function Forum() {
         finalImageUrl = await uploadForumImage(selectedFile);
       } catch (err) {
         console.error("Image upload failed:", err);
-        alert("Failed to upload image: " + err.message);
+        alert(t('alert_failed_upload_image') + err.message);
         setIsPosting(false);
         setIsUploadingImage(false);
         return;
@@ -114,7 +125,7 @@ export default function Forum() {
       loadPosts();
     } catch (err) {
       console.error("Create post failed:", err);
-      alert("Failed to publish discussion.");
+      alert(t('alert_failed_publish'));
     } finally {
       setIsPosting(false);
     }
@@ -156,7 +167,7 @@ export default function Forum() {
       loadPosts();
     } catch (err) {
       console.error("Failed to update post:", err);
-      alert("Failed to update discussion: " + err.message);
+      alert(t('alert_failed_update_post') + err.message);
     } finally {
       setIsSavingPost(false);
     }
@@ -164,16 +175,14 @@ export default function Forum() {
 
   const handleDeletePost = async (postId) => {
     if (!user) return;
-    const confirmDelete = window.confirm(
-      "WARNING: Are you sure you want to delete this discussion thread? All replies and reactions will be permanently deleted. This action cannot be undone."
-    );
+    const confirmDelete = window.confirm(t('confirm_delete_post'));
     if (confirmDelete) {
       try {
         await deleteForumPost(postId, user.token);
         loadPosts();
       } catch (err) {
         console.error("Failed to delete post:", err);
-        alert("Failed to delete discussion thread.");
+        alert(t('alert_failed_delete_post'));
       }
     }
   };
@@ -181,7 +190,7 @@ export default function Forum() {
   const handleLike = async (postId, e) => {
     e.stopPropagation();
     if (!user) {
-      alert("Please log in to react to posts.");
+      alert(t('alert_login_to_react'));
       return;
     }
     try {
@@ -202,7 +211,7 @@ export default function Forum() {
       loadPosts();
     } catch (err) {
       console.error("Create reply failed:", err);
-      alert("Failed to post reply.");
+      alert(t('alert_failed_post_reply'));
     }
   };
 
@@ -216,19 +225,19 @@ export default function Forum() {
       loadPosts();
     } catch (err) {
       console.error("Failed to update reply:", err);
-      alert("Failed to update reply.");
+      alert(t('alert_failed_update_reply'));
     }
   };
 
   const handleDeleteReply = async (replyId) => {
     if (!user) return;
-    if (window.confirm("Are you sure you want to delete this reply?")) {
+    if (window.confirm(t('confirm_delete_reply'))) {
       try {
         await deleteForumReply(replyId, user.token);
         loadPosts();
       } catch (err) {
         console.error("Failed to delete reply:", err);
-        alert("Failed to delete reply.");
+        alert(t('alert_failed_delete_reply'));
       }
     }
   };
@@ -240,7 +249,7 @@ export default function Forum() {
       loadPosts();
     } catch (err) {
       console.error("Lock/unlock action failed:", err);
-      alert("Failed to lock/unlock post.");
+      alert(t('alert_failed_lock_post'));
     }
   };
 
@@ -251,13 +260,13 @@ export default function Forum() {
       loadPosts();
     } catch (err) {
       console.error("Hide/unhide action failed:", err);
-      alert("Failed to hide/unhide post.");
+      alert(t('alert_failed_hide_post'));
     }
   };
 
   const formatRole = (userObj) => {
-    if (!userObj) return "Grower";
-    return userObj.role === "Pentadbir" ? "Admin" : "Pengusaha";
+    if (!userObj) return t('grower');
+    return userObj.role === "Pentadbir" ? t('admin_status') : t('grower');
   };
 
   const roleBadgeStyle = (userObj) => {
@@ -289,8 +298,8 @@ export default function Forum() {
             <MessageSquare size={20} className="text-white" />
           </div>
           <div>
-            <h3 className="font-extrabold text-lg leading-tight">Growers Forum</h3>
-            <p className="text-[11px] text-green-100 font-semibold uppercase tracking-wider">DurianFlow Community Hub</p>
+            <h3 className="font-extrabold text-lg leading-tight">{t('forum')}</h3>
+            <p className="text-[11px] text-green-100 font-semibold uppercase tracking-wider">{t('community_hub')}</p>
           </div>
         </div>
       </div>
@@ -301,14 +310,14 @@ export default function Forum() {
           <div className="space-y-2">
             <input
               type="text"
-              placeholder="Title of your discussion..."
+              placeholder={t('title_placeholder')}
               value={newPostTitle}
               onChange={(e) => setNewPostTitle(e.target.value)}
               required
               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
             />
             <textarea 
-              placeholder="Share your durian observations, ask about soil conditions, or check prices..."
+              placeholder={t('content_placeholder')}
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
               rows="3"
@@ -326,7 +335,7 @@ export default function Forum() {
                   type="button"
                   onClick={() => setSelectedFile(null)}
                   className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors cursor-pointer"
-                  title="Remove image"
+                  title={t('remove_image')}
                 >
                   <X size={14} />
                 </button>
@@ -337,12 +346,12 @@ export default function Forum() {
           <div className="flex flex-col sm:flex-row gap-3 justify-between sm:items-center">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
-                <span className="font-bold">Tag:</span>
+                <span className="font-bold">{t('tag_label')}</span>
                 <CustomSelect 
                   name="new_post_tag"
                   value={newPostTag}
                   onChange={(e) => setNewPostTag(e.target.value)}
-                  options={forumTagOptions}
+                  options={translatedTagOptions}
                   buttonClassName="bg-transparent outline-none font-bold text-green-700 cursor-pointer flex items-center gap-1 text-xs"
                   chevronSize={12}
                   containerClassName="inline-block"
@@ -355,7 +364,7 @@ export default function Forum() {
                 className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-xs font-bold border border-gray-200 cursor-pointer transition-colors active:scale-95 duration-150"
               >
                 <Image size={12} className="text-gray-500" />
-                <span>Attach Image</span>
+                <span>{t('attach_image')}</span>
               </label>
               <input
                 id="new-post-image-upload"
@@ -378,12 +387,12 @@ export default function Forum() {
               {isPosting || isUploadingImage ? (
                 <>
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  <span>{isUploadingImage ? "UPLOADING..." : "POSTING..."}</span>
+                  <span>{isUploadingImage ? t('uploading') : t('posting')}</span>
                 </>
               ) : (
                 <>
                   <Send size={12} />
-                  <span>POST</span>
+                  <span>{t('post_button')}</span>
                 </>
               )}
             </button>
@@ -392,8 +401,8 @@ export default function Forum() {
       ) : (
         <div className="bg-green-50 p-6 rounded-[28px] text-center border border-green-100 space-y-2">
           <Sparkles size={28} className="text-green-600 mx-auto" />
-          <h4 className="font-bold text-green-800">Join the Growers Community</h4>
-          <p className="text-xs text-green-600 max-w-sm mx-auto">Log in to publish new discussions, reply to observations, and react to market prices.</p>
+          <h4 className="font-bold text-green-800">{t('join_community')}</h4>
+          <p className="text-xs text-green-600 max-w-sm mx-auto">{t('login_to_post')}</p>
         </div>
       )}
 
@@ -402,7 +411,7 @@ export default function Forum() {
         <div className="relative">
           <input 
             type="text" 
-            placeholder="Search discussions or users..."
+            placeholder={t('search_discussions')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-white px-5 py-3.5 pl-11 text-sm text-gray-800 rounded-2xl border border-gray-100 shadow-sm outline-none focus:ring-2 focus:ring-green-500/25 transition-all"
@@ -422,7 +431,11 @@ export default function Forum() {
                   : "bg-white border-gray-100 text-gray-400 hover:text-green-600 hover:bg-green-50/30"
               }`}
             >
-              {tag}
+              {tag === "All" ? t('tag_all') :
+               tag === "General" ? t('tag_general') :
+               tag === "Fertilizer" ? t('tag_fertilizer') :
+               tag === "Pest Alert" ? t('tag_pest_alert') :
+               tag === "Market Price" ? t('tag_market_price') : tag}
             </button>
           ))}
         </div>
@@ -432,14 +445,14 @@ export default function Forum() {
       <div className="space-y-4">
         {isLoading ? (
           <div className="text-center py-10 text-gray-400 font-bold animate-pulse">
-            Loading discussions...
+            {t('loading_discussions')}
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200 px-4">
             <AlertTriangle size={36} className="mx-auto text-gray-300 mb-2" />
-            <p className="font-bold text-gray-700">No discussions found</p>
+            <p className="font-bold text-gray-700">{t('no_discussions')}</p>
             <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-              We couldn't find anything matching your query. Be the first to start a conversation!
+              {t('no_discussions_desc')}
             </p>
           </div>
         ) : (
@@ -480,21 +493,21 @@ export default function Forum() {
                         <button
                           onClick={() => handleLockPost(post.post_id)}
                           className={`transition-colors p-1 cursor-pointer ${isLocked ? "text-amber-500 hover:text-amber-600" : "text-gray-400 hover:text-amber-500"}`}
-                          title={isLocked ? "Unlock Post" : "Lock Post"}
+                          title={isLocked ? t('unlock_post') : t('lock_post')}
                         >
                           {isLocked ? <Unlock size={13} /> : <Lock size={13} />}
                         </button>
                         <button
                           onClick={() => handleHidePost(post.post_id)}
                           className={`transition-colors p-1 cursor-pointer ${isHidden ? "text-purple-500 hover:text-purple-600" : "text-gray-400 hover:text-purple-500"}`}
-                          title={isHidden ? "Unhide Post" : "Hide Post"}
+                          title={isHidden ? t('unhide_post') : t('hide_post')}
                         >
                           {isHidden ? <Eye size={13} /> : <EyeOff size={13} />}
                         </button>
                         <button
                           onClick={() => handleDeletePost(post.post_id)}
                           className="text-gray-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
-                          title="Delete Post (Moderator)"
+                          title={t('delete_post_moderator')}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -507,14 +520,14 @@ export default function Forum() {
                         <button
                           onClick={() => handleStartEditPost(post)}
                           className="text-gray-400 hover:text-blue-500 transition-colors p-1 cursor-pointer"
-                          title="Edit Post"
+                          title={t('edit_post')}
                         >
                           <Edit2 size={13} />
                         </button>
                         <button
                           onClick={() => handleDeletePost(post.post_id)}
                           className="text-gray-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
-                          title="Delete Post"
+                          title={t('delete_post')}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -525,7 +538,7 @@ export default function Forum() {
                         <button
                           onClick={() => handleStartEditPost(post)}
                           className="text-gray-400 hover:text-blue-500 transition-colors p-1 cursor-pointer"
-                          title="Edit Post"
+                          title={t('edit_post')}
                         >
                           <Edit2 size={13} />
                         </button>
@@ -553,18 +566,21 @@ export default function Forum() {
                       post.tag === "Market Price" ? "bg-amber-50 text-amber-600" :
                       "bg-gray-100 text-gray-500"
                     }`}>
-                      {post.tag}
+                      {post.tag === "General" ? t('tag_general') :
+                       post.tag === "Fertilizer" ? t('tag_fertilizer') :
+                       post.tag === "Pest Alert" ? t('tag_pest_alert') :
+                       post.tag === "Market Price" ? t('tag_market_price') : post.tag}
                     </span>
 
                     {isLocked && (
                       <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-md animate-pulse">
-                        <Lock size={10} /> Locked
+                        <Lock size={10} /> {t('locked')}
                       </span>
                     )}
 
                     {isHidden && (
                       <span className="flex items-center gap-1 text-[10px] font-black uppercase bg-purple-50 text-purple-600 px-2.5 py-0.5 rounded-md">
-                        <EyeOff size={10} /> Hidden Content
+                        <EyeOff size={10} /> {t('hidden_content')}
                       </span>
                     )}
                   </div>
@@ -597,12 +613,12 @@ export default function Forum() {
                 {/* Expanded Replies Section */}
                 {isPostExpanded && (
                   <div className="mt-4 pt-4 border-t border-gray-50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <h5 className="text-xs font-extrabold text-gray-700">Replies ({post.replies?.length || 0})</h5>
+                    <h5 className="text-xs font-extrabold text-gray-700">{t('replies_count')} ({post.replies?.length || 0})</h5>
                     
                     {/* Replies List */}
                     <div className="space-y-3 max-h-72 overflow-y-auto no-scrollbar pr-1">
                       {(!post.replies || post.replies.length === 0) ? (
-                        <p className="text-xs text-gray-400 italic">No replies yet. Be the first to reply!</p>
+                        <p className="text-xs text-gray-400 italic">{t('no_replies')}</p>
                       ) : (
                         post.replies.map(reply => {
                           const isEditingReply = editingReplyId === reply.reply_id;
@@ -679,13 +695,13 @@ export default function Forum() {
                     {isLocked && !isAdmin ? (
                       <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 p-3 rounded-2xl text-[10px] font-bold text-amber-700">
                         <Lock size={12} className="text-amber-500 flex-shrink-0" />
-                        <span>Discussion locked by administrator. New replies are disabled.</span>
+                        <span>{t('locked_post')}</span>
                       </div>
                     ) : user ? (
                       <div className="flex gap-2 items-center pt-2">
                         <input
                           type="text"
-                          placeholder="Write a reply..."
+                          placeholder={t('write_reply')}
                           value={replyText[post.post_id] || ""}
                           onChange={(e) => setReplyText({ ...replyText, [post.post_id]: e.target.value })}
                           onKeyDown={(e) => {
@@ -702,7 +718,7 @@ export default function Forum() {
                         </button>
                       </div>
                     ) : (
-                      <p className="text-[10px] text-gray-400 italic">Please log in to write replies.</p>
+                      <p className="text-[10px] text-gray-400 italic">{t('login_to_reply')}</p>
                     )}
                   </div>
                 )}
@@ -717,7 +733,7 @@ export default function Forum() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-[32px] w-full max-w-lg p-6 shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-extrabold text-lg text-gray-800">Edit Discussion</h3>
+              <h3 className="font-extrabold text-lg text-gray-800">{t('edit_discussion')}</h3>
               <button 
                 onClick={handleCancelEdit}
                 className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
@@ -728,10 +744,10 @@ export default function Forum() {
             
             <form onSubmit={handleSavePost} className="space-y-4 overflow-y-auto pr-1">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Discussion Title</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('discussion_title')}</label>
                 <input
                   type="text"
-                  placeholder="Title..."
+                  placeholder={t('title_placeholder')}
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   required
@@ -740,9 +756,9 @@ export default function Forum() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Discussion Body</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('discussion_body')}</label>
                 <textarea 
-                  placeholder="Share details..."
+                  placeholder={t('content_placeholder')}
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows="4"
@@ -752,7 +768,7 @@ export default function Forum() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Discussion Image</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('discussion_image')}</label>
                 
                 {editSelectedFile ? (
                   <div className="relative inline-block mt-1 rounded-2xl overflow-hidden border border-gray-200 shadow-sm max-w-xs animate-in fade-in duration-200">
@@ -765,7 +781,7 @@ export default function Forum() {
                       type="button"
                       onClick={() => setEditSelectedFile(null)}
                       className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors cursor-pointer"
-                      title="Remove selected image"
+                      title={t('remove_image')}
                     >
                       <X size={14} />
                     </button>
@@ -781,7 +797,7 @@ export default function Forum() {
                       type="button"
                       onClick={() => setEditImageUrl("")}
                       className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors cursor-pointer shadow-md"
-                      title="Remove image"
+                      title={t('remove_image')}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -793,7 +809,7 @@ export default function Forum() {
                       className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-xs font-bold border border-gray-200 cursor-pointer transition-colors active:scale-95 duration-150"
                     >
                       <Image size={14} className="text-gray-500" />
-                      <span>Choose Image from Library</span>
+                      <span>{t('choose_library_image')}</span>
                     </label>
                     <input
                       id="edit-post-image-upload"
@@ -812,12 +828,12 @@ export default function Forum() {
 
               <div className="flex justify-between items-center pt-2">
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-500 border border-gray-200">
-                  <span className="font-bold">Tag:</span>
+                  <span className="font-bold">{t('tag_label')}</span>
                   <CustomSelect 
                     name="edit_tag"
                     value={editTag}
                     onChange={(e) => setEditTag(e.target.value)}
-                    options={forumTagOptions}
+                    options={translatedTagOptions}
                     buttonClassName="bg-transparent outline-none font-bold text-green-700 cursor-pointer flex items-center gap-1 text-xs"
                     chevronSize={12}
                     containerClassName="inline-block"
@@ -831,7 +847,7 @@ export default function Forum() {
                     onClick={handleCancelEdit}
                     className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
                   >
-                    CANCEL
+                    {t('cancel')}
                   </button>
                   <button 
                     type="submit" 
@@ -841,10 +857,10 @@ export default function Forum() {
                     {isSavingPost ? (
                       <>
                         <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span>SAVING...</span>
+                        <span>{t('saving')}</span>
                       </>
                     ) : (
-                      <span>SAVE CHANGES</span>
+                      <span>{t('save_changes')}</span>
                     )}
                   </button>
                 </div>

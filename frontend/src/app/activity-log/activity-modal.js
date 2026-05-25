@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Info, Beaker, Thermometer, Droplets, Bot, Save } from 'lucide-react';
 import { fetchCurrentWeather } from '@/services/dashboard';
 import CustomSelect from '@/app/components/custom-select';
+import { useLanguage } from '@/app/context/language_context';
 
 const activityTypeOptions = [
   { value: "Fertilization", label: "Fertilization (Pembajaan)"},
@@ -27,6 +28,35 @@ const pestControlOptions = [
 ];
 
 export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs }) {
+  const { t } = useLanguage();
+
+  const translatedActivityTypeOptions = activityTypeOptions.map(opt => {
+    let label = opt.label;
+    if (opt.value === "Fertilization") label = t('fertilization');
+    else if (opt.value === "Pruning") label = t('pruning');
+    else if (opt.value === "Irrigation") label = t('irrigation');
+    else if (opt.value === "Weeding") label = t('weeding');
+    else if (opt.value === "Pest/Disease Spraying") label = t('pest_spraying');
+    else if (opt.value === "Fruit Tying & Thinning") label = t('fruit_tying');
+    else if (opt.value === "Harvesting") label = t('harvesting');
+    return { ...opt, label };
+  });
+
+  const translatedFertilizerTypeOptions = fertilizerTypeOptions.map(opt => {
+    let label = opt.label;
+    if (opt.value === "Organic") label = t('organic_fertilizer');
+    return { ...opt, label };
+  });
+
+  const translatedPestControlOptions = pestControlOptions.map(opt => {
+    let label = opt.label;
+    if (opt.value === "None") label = t('no_pest_treatment');
+    else if (opt.value === "Fungicide (Canker)") label = t('fungicide');
+    else if (opt.value === "Insecticide (Borers)") label = t('insecticide');
+    else if (opt.value === "Organic (Neem)") label = t('organic_neem');
+    return { ...opt, label };
+  });
+
   const [formData, setFormData] = useState({
     activity_type: "Fertilization",
     fertilizer_type: "NPK 15-15-15", 
@@ -126,7 +156,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
             log_date: new Date().toISOString() // Pre-fill log_date so the UI renders it nicely
           };
           await saveOfflineLog(offlinePayload);
-          alert("Saved Offline: Connection offline. Your activity has been saved locally and will auto-sync when connection is restored.");
+          alert(t('saved_offline_msg'));
           
           // Reset form fields
           setFormData({
@@ -145,7 +175,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           }
         } catch (dbErr) {
           console.error("Failed to save log offline:", dbErr);
-          alert("Failed to save activity offline: " + dbErr.message);
+          alert(t('failed_offline_save') + dbErr.message);
         } finally {
           setTimeout(() => {
             submittingRef.current = false;
@@ -186,12 +216,12 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-2xl font-extrabold text-green-900">
-              {editingLog ? "Edit Activity Record" : "New Activity"}
+              {editingLog ? t('edit_activity_record') : t('new_activity')}
             </h3>
             <div className="flex items-center gap-1.5 text-gray-400 mt-1">
               <Info size={12} className="text-green-500" />
               <p className="text-[10px] font-black uppercase tracking-wider">
-                Farm Target: {activeFarm?.farm_name || "Unknown Farm"}
+                {t('farm_target')}: {activeFarm?.farm_name || "Unknown Farm"}
               </p>
             </div>
           </div>
@@ -206,24 +236,24 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Activity Type Selector */}
           <div className="relative">
-            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Activity Type</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">{t('activity_type')}</label>
             <CustomSelect 
               name="activity_type"
               value={formData.activity_type}
               onChange={handleChange}
-              options={activityTypeOptions}
+              options={translatedActivityTypeOptions}
             />
           </div>
 
           {/* Fertilizer Type (Conditionally rendered) */}
           {formData.activity_type === "Fertilization" && (
             <div className="relative">
-              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Fertilizer Type</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">{t('fertilizer_type')}</label>
               <CustomSelect 
                 name="fertilizer_type"
                 value={formData.fertilizer_type}
                 onChange={handleChange}
-                options={fertilizerTypeOptions}
+                options={translatedFertilizerTypeOptions}
                 icon={Beaker}
               />
             </div>
@@ -233,7 +263,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           {formData.activity_type === "Fertilization" ? (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5 truncate">Total Amount (kg)</label>
+                <label className="block text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5 truncate">{t('total_amount')}</label>
                 <input 
                   type="number" 
                   name="fertilizer_amount"
@@ -245,16 +275,16 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                   className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
                 />
                 <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
-                  Total weight.
+                  {t('total_amount')}.
                 </span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5 ml-2 mb-1.5">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase">Soil pH</label>
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase">{t('soil_ph')}</label>
                   <div className="group relative cursor-pointer">
                     <Info size={13} className="text-gray-400 hover:text-green-600 transition-colors" />
                     <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-gray-900 text-white text-[10px] font-semibold leading-relaxed rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300 shadow-xl z-50 text-center">
-                      Use composite soil sample average. Test and update every 2-3 months.
+                      {t('composite_soil_info')}
                       <div className="absolute top-full right-2 border-4 border-transparent border-t-gray-900"></div>
                     </div>
                   </div>
@@ -270,18 +300,18 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                   className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
                 />
                 <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
-                  Soil property.
+                  {t('soil_ph')}.
                 </span>
               </div>
             </div>
           ) : (
             <div>
               <div className="flex items-center gap-1.5 ml-2 mb-1.5">
-                <label className="text-xs font-bold text-gray-400 uppercase">Soil pH</label>
+                <label className="text-xs font-bold text-gray-400 uppercase">{t('soil_ph')}</label>
                 <div className="group relative cursor-pointer">
                   <Info size={13} className="text-gray-400 hover:text-green-600 transition-colors" />
                   <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-gray-900 text-white text-[10px] font-semibold leading-relaxed rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300 shadow-xl z-50 text-center">
-                    Use composite soil sample average. Test and update every 2-3 months.
+                    {t('composite_soil_info')}
                     <div className="absolute top-full right-2 border-4 border-transparent border-t-gray-900"></div>
                   </div>
                 </div>
@@ -297,7 +327,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all" 
               />
               <span className="text-[9px] text-gray-400 mt-1 block ml-2 leading-tight">
-                Soil property.
+                {t('soil_ph')}.
               </span>
             </div>
           )}
@@ -305,21 +335,21 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           {/* Temp & Rain (Always display as weather stats are universal) */}
           <div className="relative">
             <div className="flex justify-between items-center ml-2 mb-1.5">
-              <span className="text-[10px] font-bold text-gray-400 uppercase">Weather Conditions</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase">{t('weather_conditions')}</span>
               {isFetchingWeather ? (
                 <span className="text-[9px] text-green-600 font-extrabold animate-pulse flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
-                  Detecting local forecast...
+                  {t('detecting_weather')}
                 </span>
               ) : (
                 !editingLog && (
                   typeof window !== 'undefined' && !window.navigator.onLine ? (
                     <span className="text-[9px] text-amber-600 font-black tracking-wider bg-amber-50 px-2 py-0.5 rounded-full uppercase">
-                      Latest Known Values (Offline)
+                      {t('latest_known_offline')}
                     </span>
                   ) : (
                     <span className="text-[9px] text-emerald-600 font-black tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
-                      Auto-filled by Open-Meteo
+                      {t('autofilled_weather')}
                     </span>
                   )
                 )
@@ -327,7 +357,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1">Temp (°C)</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1">{t('temperature_c')}</label>
                 <div className={`flex items-center gap-2 p-4 rounded-2xl border border-gray-200 focus-within:ring-2 focus-within:ring-green-500/30 focus-within:border-green-600 transition-all ${isFetchingWeather ? 'bg-gray-100/50 animate-pulse' : 'bg-gray-50'}`}>
                   <Thermometer size={18} className="text-orange-400 flex-shrink-0" />
                   <input 
@@ -344,7 +374,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1">Rainfall (mm)</label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1">{t('rainfall_mm')}</label>
                 <div className={`flex items-center gap-2 p-4 rounded-2xl border border-gray-200 focus-within:ring-2 focus-within:ring-green-500/30 focus-within:border-green-600 transition-all ${isFetchingWeather ? 'bg-gray-100/50 animate-pulse' : 'bg-gray-50'}`}>
                   <Droplets size={18} className="text-blue-400 flex-shrink-0" />
                   <input 
@@ -366,12 +396,12 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           {/* Pest Control (Conditionally rendered) */}
           {formData.activity_type === "Pest/Disease Spraying" && (
             <div className="relative">
-              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Pest Control Treatment</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">{t('pest_treatment')}</label>
               <CustomSelect 
                 name="pest_control"
                 value={formData.pest_control}
                 onChange={handleChange}
-                options={pestControlOptions}
+                options={translatedPestControlOptions}
                 icon={Bot}
               />
             </div>
@@ -379,7 +409,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
 
           {/* Remarks */}
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">Remarks / Observations</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase ml-2 mb-1.5">{t('remarks')}</label>
             <textarea 
               name="remarks"
               value={formData.remarks}
@@ -401,7 +431,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
             }`}
           >
             <Save size={18} /> 
-            {isSubmitting ? "SAVING..." : editingLog ? "SAVE CHANGES" : "SAVE ACTIVITY"}
+            {isSubmitting ? t('saving') : editingLog ? t('save_changes') : t('add_record')}
           </button>
         </form>
       </div>

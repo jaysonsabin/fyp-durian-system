@@ -10,6 +10,7 @@ import CustomSelect from '@/app/components/custom-select';
 import BottomNav from '@/app/components/bottom_nav';
 import Library from '@/app/e-library/page';
 import { useAuth } from '@/app/context/auth_context';
+import { useLanguage } from '@/app/context/language_context';
 
 // Dashboard Modular Subcomponents
 import FarmCreationLock from '@/app/activity-log/components/farm-creation-lock';
@@ -25,6 +26,7 @@ import { fetchFarms, fetchLogs, createFarm, createActivityLog, updateActivityLog
 export default function DashboardPage() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
+  const { t } = useLanguage();
   
   // Navigation and Modal Visibility States
   const [activeModule, setActiveModule] = useState('records');
@@ -203,7 +205,7 @@ export default function DashboardPage() {
       await fetchFarmsData();
     } catch (error) {
       console.error("Error creating first farm:", error);
-      alert("Failed to create farm partition.");
+      alert(t('alert_farm_create_failed'));
       throw error;
     }
   };
@@ -230,10 +232,10 @@ export default function DashboardPage() {
       if (editingLog) {
         await updateActivityLog(editingLog.log_id, formData, user.token);
         setEditingLog(null);
-        alert("Activity updated successfully!");
+        alert(t('alert_log_updated'));
       } else {
         await createActivityLog(formData, user.token);
-        alert("Activity saved successfully!");
+        alert(t('alert_log_saved'));
       }
       setShowRecordModal(false);
       if (activeFarm) {
@@ -241,7 +243,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error saving activity:", error);
-      alert("Failed to save activity. Check console for details.");
+      alert(t('alert_log_save_failed'));
       throw error;
     }
   };
@@ -252,16 +254,16 @@ export default function DashboardPage() {
   };
 
   const handleDeleteLog = async (logId) => {
-    if (window.confirm("Are you sure you want to permanently delete this activity log record?")) {
+    if (window.confirm(t('confirm_delete_log'))) {
       try {
         await deleteActivityLog(logId, user.token);
         if (activeFarm) {
           fetchLogsData(activeFarm.farm_id);
         }
-        alert("Activity log deleted successfully.");
+        alert(t('alert_log_deleted'));
       } catch (error) {
         console.error("Error deleting log:", error);
-        alert("Failed to delete activity log.");
+        alert(t('alert_log_delete_failed'));
       }
     }
   };
@@ -272,7 +274,7 @@ export default function DashboardPage() {
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-green-500 font-bold text-sm tracking-wide">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-green-500/20 border-t-green-500 rounded-full animate-spin"></div>
-          <span>Loading DurianFlow Secure Environment...</span>
+          <span>{t('loading_environment')}</span>
         </div>
       </div>
     );
@@ -293,7 +295,7 @@ export default function DashboardPage() {
       {/* Top Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-emerald-500/10 bg-gradient-to-r from-green-600 to-emerald-700 px-6 py-4 shadow-lg">
         <div>
-          <h2 className="text-xl font-bold text-gray-800 capitalize tracking-tight">{activeModule}</h2>
+          <h2 className="text-xl font-bold text-gray-800 capitalize tracking-tight">{activeModule === 'yield' ? t('yield_ai') : t(activeModule)}</h2>
           {user?.role !== 'Pentadbir' && activeFarm && userFarms.length > 0 && (
             <div className="relative mt-1">
               <CustomSelect 

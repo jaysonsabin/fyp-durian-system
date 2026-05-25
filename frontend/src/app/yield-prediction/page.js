@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Bot, Sparkles, Thermometer, Droplets, Beaker, Sprout, Brain, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/app/context/auth_context';
+import { useLanguage } from '@/app/context/language_context';
 import { fetchYieldPrediction } from '@/services/dashboard';
 
 export default function YieldPredictor({ activeFarm }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   const [prediction, setPrediction] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -49,10 +51,9 @@ export default function YieldPredictor({ activeFarm }) {
           <Brain size={24} />
         </div>
         <div>
-          <h3 className="font-extrabold text-gray-800 text-lg">ML Yield Predictor</h3>
+          <h3 className="font-extrabold text-gray-800 text-lg">ML {t('yield_ai')}</h3>
           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-            Estimate seasonal harvest yields for <span className="font-bold text-green-700">{activeFarm?.farm_name || "your plantation"}</span>. 
-            This module derives environmental baselines from activity logs and predicts yields using custom-trained models.
+            {t('yield_desc')} ({activeFarm?.farm_name || t('my_plantations')})
           </p>
         </div>
       </div>
@@ -60,7 +61,7 @@ export default function YieldPredictor({ activeFarm }) {
       {isAnalyzing && (
         <div className="bg-white p-12 rounded-[32px] shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-4 text-center">
           <div className="w-10 h-10 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin"></div>
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">Training & Calibrating Models...</span>
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">{t('training_models')}</span>
         </div>
       )}
 
@@ -77,13 +78,13 @@ export default function YieldPredictor({ activeFarm }) {
             <Sprout size={32} />
           </div>
           <div className="max-w-xs mx-auto">
-            <h4 className="font-black text-gray-800 text-base">Calibration Required</h4>
+            <h4 className="font-black text-gray-800 text-base">{t('calibration_required')}</h4>
             <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
-              To run yield predictions for this farm, we need at least <strong>1 activity log record</strong> to formulate an environmental baseline.
+              {t('calibration_desc')}
             </p>
           </div>
           <div className="text-[11px] text-green-800 bg-green-50/80 px-4 py-3 rounded-2xl border border-green-100/30 inline-block max-w-sm font-semibold leading-relaxed">
-            Please navigate to the <strong>Records</strong> tab and add an activity log containing temperature, rainfall, soil pH, and fertilizer data.
+            {t('navigate_records_desc')}
           </div>
         </div>
       )}
@@ -94,7 +95,7 @@ export default function YieldPredictor({ activeFarm }) {
           
           {/* Read-Only Baselines Panel */}
           <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 space-y-4">
-            <h4 className="font-black text-gray-700 text-xs uppercase tracking-wider">Active Environmental Baseline</h4>
+            <h4 className="font-black text-gray-700 text-xs uppercase tracking-wider">{t('environmental_baseline')}</h4>
             <div className="grid grid-cols-2 gap-3.5">
               
               {/* Temp Metric */}
@@ -103,7 +104,7 @@ export default function YieldPredictor({ activeFarm }) {
                   <Thermometer size={18} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">Temperature</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">{t('temperature')}</span>
                   <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.temperature} °C</p>
                 </div>
               </div>
@@ -114,7 +115,7 @@ export default function YieldPredictor({ activeFarm }) {
                   <Droplets size={18} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">Rainfall</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">{t('rainfall')}</span>
                   <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.rainfall} mm</p>
                 </div>
               </div>
@@ -125,7 +126,7 @@ export default function YieldPredictor({ activeFarm }) {
                   <Beaker size={18} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">Soil pH</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">{t('soil_ph')}</span>
                   <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.soil_ph}</p>
                 </div>
               </div>
@@ -136,21 +137,21 @@ export default function YieldPredictor({ activeFarm }) {
                   <Sprout size={18} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">Fertilizer</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">{t('fertilizer')}</span>
                   <p className="font-black text-gray-800 text-sm mt-0.5">{prediction.derived_inputs.fertilizer} kg/ha</p>
                 </div>
               </div>
 
             </div>
             <p className="text-[10px] text-gray-400 leading-normal italic text-center">
-              These values represent the mathematical average of all activity logs recorded for this farm.
+              {t('baseline_desc')}
             </p>
           </div>
 
           <div className="flex justify-between items-center border-b border-gray-200 pb-2">
             <h4 className="font-extrabold text-gray-800 text-sm flex items-center gap-1.5">
               <Sparkles size={16} className="text-green-600" />
-              Yield Predictions
+              {t('predicted_yield')}
             </h4>
           </div>
 
@@ -161,12 +162,12 @@ export default function YieldPredictor({ activeFarm }) {
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Random Forest Model</span>
                 <span className="text-[10px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
-                  ACCURACY: {prediction.random_forest.accuracy}%
+                  {t('accuracy').toUpperCase()}: {prediction.random_forest.accuracy}%
                 </span>
               </div>
               <div className="flex items-baseline justify-start gap-1 py-1">
                 <span className="text-3xl font-black text-green-800">{prediction.random_forest.yield_predicted}</span>
-                <span className="text-xs font-bold text-gray-500">kg / hectare</span>
+                <span className="text-xs font-bold text-gray-500">{t('kg_ha')}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
                 <div className="text-center">
@@ -189,12 +190,12 @@ export default function YieldPredictor({ activeFarm }) {
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Linear Regression Model</span>
                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                  ACCURACY: {prediction.linear_regression.accuracy}%
+                  {t('accuracy').toUpperCase()}: {prediction.linear_regression.accuracy}%
                 </span>
               </div>
               <div className="flex items-baseline justify-start gap-1 py-1">
                 <span className="text-3xl font-black text-blue-800">{prediction.linear_regression.yield_predicted}</span>
-                <span className="text-xs font-bold text-gray-500">kg / hectare</span>
+                <span className="text-xs font-bold text-gray-500">{t('kg_ha')}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
                 <div className="text-center">
@@ -218,7 +219,7 @@ export default function YieldPredictor({ activeFarm }) {
           <div className="bg-green-50/50 p-5 rounded-[24px] border border-green-100/40 flex gap-3.5">
             <Bot size={22} className="text-green-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-green-800 leading-relaxed font-semibold">
-              <p className="font-black uppercase text-[10px] text-green-700 tracking-wider mb-1">AI Soil & Environmental Recommendation</p>
+              <p className="font-black uppercase text-[10px] text-green-700 tracking-wider mb-1">{t('ai_reco_title')}</p>
               {prediction.recommendation}
             </div>
           </div>

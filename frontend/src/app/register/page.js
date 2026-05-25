@@ -2,11 +2,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLanguage } from '@/app/context/language_context';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -29,7 +31,7 @@ export default function RegisterPage() {
     setStatus({ type: '', message: '' });
 
     if (formData.password !== formData.confirm_password) {
-      setStatus({type: 'error', message: "Passwords do not match."});
+      setStatus({type: 'error', message: t('alert_passwords_mismatch')});
       setIsLoading(false);
       return;
     }
@@ -38,23 +40,21 @@ export default function RegisterPage() {
       const response = await fetch(`${API_BASE}/register/farmer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Notice we are automatically assigning the "Pengusaha" (Farmer) role here!
         body: JSON.stringify({ full_name: formData.full_name, username: formData.username, password: formData.password, role: "Pengusaha" }), 
       });
 
       if (response.ok) {
-        setStatus({ type: 'success', message: 'Registration successful! Redirecting to login...' });
-        // Give them a second to read the success message before sending them to login
+        setStatus({ type: 'success', message: t('alert_register_success') });
         setTimeout(() => {
           router.push('/');
         }, 2000);
       } else {
         const errorData = await response.json();
-        setStatus({ type: 'error', message: errorData.detail || "Registration failed." });
+        setStatus({ type: 'error', message: errorData.detail || t('alert_register_failed') });
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setStatus({ type: 'error', message: "Cannot connect to the server." });
+      setStatus({ type: 'error', message: t('alert_cannot_connect') });
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +69,8 @@ export default function RegisterPage() {
       
       <div className="relative bg-white pt-12 pb-10 px-10 rounded-[40px] w-[90%] max-w-[450px] shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-green-600 mb-2">Create Account</h1>
-          <p className="text-gray-500 font-light text-sm">Join DurianFlow today</p>
+          <h1 className="text-4xl font-bold text-green-600 mb-2">{t('register_title')}</h1>
+          <p className="text-gray-500 font-light text-sm">{t('register_subtitle')}</p>
         </div>
         
         {/* Status Message Display */}
@@ -87,7 +87,7 @@ export default function RegisterPage() {
             value={formData.full_name}
             onChange={handleChange}
             className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
-            placeholder="Full Name" 
+            placeholder={t('fullname')} 
             required 
           />
           <input 
@@ -96,7 +96,7 @@ export default function RegisterPage() {
             value={formData.username}
             onChange={handleChange}
             className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
-            placeholder="Username" 
+            placeholder={t('username')} 
             required 
           />
           <input 
@@ -105,16 +105,16 @@ export default function RegisterPage() {
             value={formData.password}
             onChange={handleChange}
             className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
-            placeholder="Password" 
+            placeholder={t('password')} 
             required 
           />
           <input
-            type = "password"
-            name = "confirm_password"
-            value = {formData.confirm_password}
-            onChange = {handleChange}
-            className = "w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            placeholder = "Confirm Password"
+            type="password"
+            name="confirm_password"
+            value={formData.confirm_password}
+            onChange={handleChange}
+            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            placeholder={t('confirm_password')}
             required
           />
           <button 
@@ -122,14 +122,14 @@ export default function RegisterPage() {
             disabled={isLoading}
             className={`w-full text-white py-4 mt-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${isLoading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
           >
-            {isLoading ? "CREATING ACCOUNT..." : "SIGN UP"}
+            {isLoading ? t('registering') : t('register_button')}
           </button>
         </form>
 
         <div className="mt-8 text-center text-sm text-gray-500">
-          Already have an account?{' '}
+          {t('have_account')}{' '}
           <Link href="/" className="text-green-600 font-bold hover:underline">
-            Log in here
+            {t('login_here')}
           </Link>
         </div>
       </div>

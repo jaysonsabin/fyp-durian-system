@@ -1,6 +1,21 @@
 import { Calendar, Trash2, Edit2 } from 'lucide-react';
+import { useLanguage } from '@/app/context/language_context';
 
 export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLog }) {
+  const { t } = useLanguage();
+
+  const getActivityName = (type) => {
+    switch (type) {
+      case "Fertilization": return t('fertilization');
+      case "Pruning": return t('pruning');
+      case "Irrigation": return t('irrigation');
+      case "Weeding": return t('weeding');
+      case "Pest/Disease Spraying": return t('pest_spraying');
+      case "Fruit Tying & Thinning": return t('fruit_tying');
+      case "Harvesting": return t('harvesting');
+      default: return type;
+    }
+  };
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -10,28 +25,28 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
         year: 'numeric' 
       });
     } catch (e) {
-      return "Recent Activity";
+      return t('recent_activity');
     }
   };
 
   const getActivityBadge = (type) => {
     switch (type) {
       case "Fertilization": 
-        return { label: "Fertilization", color: "bg-emerald-50 text-emerald-700 border-emerald-100" };
+        return { label: t('fertilization'), color: "bg-emerald-50 text-emerald-700 border-emerald-100" };
       case "Pruning": 
-        return { label: "Pruning", color: "bg-blue-50 text-blue-700 border-blue-100" };
+        return { label: t('pruning'), color: "bg-blue-50 text-blue-700 border-blue-100" };
       case "Irrigation": 
-        return { label: "Irrigation", color: "bg-cyan-50 text-cyan-700 border-cyan-100" };
+        return { label: t('irrigation'), color: "bg-cyan-50 text-cyan-700 border-cyan-100" };
       case "Weeding": 
-        return { label: "Weeding", color: "bg-amber-50 text-amber-700 border-amber-100" };
+        return { label: t('weeding'), color: "bg-amber-50 text-amber-700 border-amber-100" };
       case "Pest/Disease Spraying": 
-        return { label: "Pest Spraying", color: "bg-purple-50 text-purple-700 border-purple-100" };
+        return { label: t('pest_spraying'), color: "bg-purple-50 text-purple-700 border-purple-100" };
       case "Fruit Tying & Thinning": 
-        return { label: "Thinning/Tying", color: "bg-rose-50 text-rose-700 border-rose-100" };
+        return { label: t('fruit_tying'), color: "bg-rose-50 text-rose-700 border-rose-100" };
       case "Harvesting": 
-        return { label: "Harvesting", color: "bg-orange-50 text-orange-700 border-orange-100" };
+        return { label: t('harvesting'), color: "bg-orange-50 text-orange-700 border-orange-100" };
       default: 
-        return { label: type || "Activity", color: "bg-gray-50 text-gray-700 border-gray-100" };
+        return { label: type || t('activity_type'), color: "bg-gray-50 text-gray-700 border-gray-100" };
     }
   };
 
@@ -39,7 +54,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="w-8 h-8 border-4 border-green-500/20 border-t-green-600 rounded-full animate-spin"></div>
-        <p className="text-sm font-semibold text-gray-400 animate-pulse">Retrieving records...</p>
+        <p className="text-sm font-semibold text-gray-400 animate-pulse">{t('retrieving_records')}</p>
       </div>
     );
   }
@@ -48,9 +63,9 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
     return (
       <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 px-6">
         <Calendar size={40} className="mx-auto text-gray-300 mb-3" />
-        <p className="font-bold text-gray-700">No activities recorded yet.</p>
+        <p className="font-bold text-gray-700">{t('no_activities')}</p>
         <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-          Tap the "+" button below to log your first farm activity record.
+          {t('no_activities_desc')}
         </p>
       </div>
     );
@@ -59,9 +74,9 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-center px-1">
-        <h3 className="text-lg font-bold text-gray-700">Farm Activity History</h3>
+        <h3 className="text-lg font-bold text-gray-700">{t('activity_history_title')}</h3>
         <span className="text-[11px] bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
-          {logs.length} {logs.length === 1 ? 'Record' : 'Records'}
+          {logs.length} {logs.length === 1 ? t('record') : t('records_label')}
         </span>
       </div>
       
@@ -97,7 +112,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                   
                   {log.pendingSync && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200 animate-pulse uppercase tracking-wider">
-                    Pending Sync
+                      {t('pending_sync')}
                     </span>
                   )}
 
@@ -109,7 +124,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                 <div className="flex items-center gap-1.5">
                   {index === 0 && !log.pendingSync && (
                     <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
-                      Latest
+                      {t('latest')}
                     </span>
                   )}
                   <button
@@ -120,7 +135,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                         ? 'text-gray-200 cursor-not-allowed opacity-50' 
                         : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer'
                     }`}
-                    title={log.pendingSync ? "Cannot edit unsynced offline log" : "Edit activity"}
+                    title={log.pendingSync ? t('cannot_edit_offline') : t('edit_activity')}
                   >
                     <Edit2 size={12} />
                   </button>
@@ -132,7 +147,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                         ? 'text-gray-200 cursor-not-allowed opacity-50' 
                         : 'text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
                     }`}
-                    title={log.pendingSync ? "Cannot delete unsynced offline log" : "Delete activity"}
+                    title={log.pendingSync ? t('cannot_delete_offline') : t('delete_activity')}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -140,26 +155,26 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
               </div>
               
               <h4 className="font-black text-green-800 text-lg leading-tight mb-2">
-                {log.activity_type === "Fertilization" ? `Fertilization: ${log.fertilizer_type}` : log.activity_type}
+                {log.activity_type === "Fertilization" ? `${t('fertilization')}: ${log.fertilizer_type === 'Organic' ? t('organic_fertilizer') : log.fertilizer_type}` : getActivityName(log.activity_type)}
               </h4>
               
               <div className={`grid ${log.activity_type === "Fertilization" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"} gap-3 bg-gray-50/50 p-3 rounded-2xl border border-gray-100 text-xs mb-3`}>
                 {log.activity_type === "Fertilization" && (
                   <div>
-                    <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Amount</p>
+                    <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('amount_label')}</p>
                     <p className="font-extrabold text-gray-700">{log.fertilizer_amount} kg</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Soil pH</p>
+                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('soil_ph')}</p>
                   <p className="font-extrabold text-gray-700">{log.soil_ph}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Temp</p>
+                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('temp_label')}</p>
                   <p className="font-extrabold text-gray-700">{log.temperature} °C</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">Rainfall</p>
+                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('rainfall_label')}</p>
                   <p className="font-extrabold text-gray-700">{log.rainfall} mm</p>
                 </div>
               </div>
@@ -167,7 +182,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
               {log.pest_control && log.pest_control !== "None" && (
                 <div className="inline-flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1 rounded-xl text-xs font-semibold mb-2">
                   <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                  Pest Control: {log.pest_control}
+                  {t('pest_control_label')}: {log.pest_control === "Fungicide (Canker)" ? t('fungicide') : (log.pest_control === "Insecticide (Borers)" ? t('insecticide') : (log.pest_control === "Organic (Neem)" ? t('organic_neem') : log.pest_control))}
                 </div>
               )}
 
