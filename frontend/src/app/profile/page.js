@@ -223,11 +223,34 @@ export default function ProfilePage() {
 
       <main className="max-w-3xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         
+        {/* Telemetry Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center">
+              <Sprout size={22} />
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">My Plantations</span>
+              <span className="text-lg font-black text-gray-800">{farms.length} Active</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl flex items-center justify-center">
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Account Status</span>
+              <span className="text-lg font-black text-gray-800">{user?.role === 'Pentadbir' ? 'Administrator' : 'Verified Farmer'}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Profile Section */}
         <section className="bg-white p-6 md:p-8 rounded-[32px] shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-              <User size={24} />
+            <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center">
+              <User size={22} />
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-800">Personal Details</h3>
@@ -245,7 +268,7 @@ export default function ProfilePage() {
                 onChange={handleProfileChange}
                 placeholder="e.g., Ahmad Bin Abdullah"
                 required
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white transition-all text-sm font-semibold text-gray-800 placeholder-gray-400"
               />
             </div>
             <div>
@@ -257,13 +280,17 @@ export default function ProfilePage() {
                 rows="2"
                 placeholder="Your residential address..."
                 required
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white transition-all text-sm font-semibold text-gray-800 placeholder-gray-400 resize-none"
               ></textarea>
             </div>
             <button 
               type="submit" 
               disabled={isSavingProfile}
-              className={`w-full text-white py-4 rounded-2xl font-bold shadow-md transition-all ${isSavingProfile ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+              className={`w-full text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-600/10 transition-all active:scale-95 cursor-pointer ${
+                isSavingProfile 
+                  ? 'bg-gray-400 cursor-not-allowed shadow-none' 
+                  : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+              }`}
             >
               {isSavingProfile ? "SAVING..." : "SAVE CHANGES"}
             </button>
@@ -272,10 +299,10 @@ export default function ProfilePage() {
 
         {/* Farm Management Section */}
         <section className="bg-white p-6 md:p-8 rounded-[32px] shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3 sm:gap-0">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center">
-                <Sprout size={24} />
+              <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center">
+                <Sprout size={22} />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-800">My Plantations</h3>
@@ -325,13 +352,19 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
+                        <div className="w-10 h-10 bg-gray-50 border border-gray-100 text-gray-400 rounded-full flex items-center justify-center transition-colors">
                           <Home size={18} />
                         </div>
                         <div>
                           <p className="font-bold text-gray-800">{farm.farm_name}</p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                            <MapPin size={10} /> {farm.farm_location}
+                          <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1 flex-wrap">
+                            <MapPin size={10} className="text-green-600" />
+                            <span>{farm.farm_location}</span>
+                            {farm.latitude !== null && farm.longitude !== null && (
+                              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-bold font-mono">
+                                GPS: {Number(farm.latitude).toFixed(4)}, {Number(farm.longitude).toFixed(4)}
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -360,7 +393,7 @@ export default function ProfilePage() {
                         <>
                           <button
                             onClick={() => handleStartEditFarm(farm)}
-                            className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer"
+                            className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-green-50 hover:text-green-600 transition-colors cursor-pointer"
                             title="Edit Plantation"
                           >
                             <Edit2 size={16} />
