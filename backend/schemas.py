@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from typing import Optional, List
 from models import UserRole
@@ -13,7 +13,7 @@ class UserLogin(BaseModel):
 class UserCreate(BaseModel):
     full_name: str
     username: str
-    password: str  # The raw password from the user
+    password: str = Field(..., min_length=8)
     role: UserRole
 
 # Data required to create a Farmer (inherits from User)
@@ -218,4 +218,4 @@ class YieldPredictionResponse(BaseModel):
     linear_regression: ModelPredictionDetails
     random_forest: ModelPredictionDetails
     recommendation: str
-
+

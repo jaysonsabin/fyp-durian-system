@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/app/context/language_context';
+import { Eye, EyeOff } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
 
@@ -19,6 +20,8 @@ export default function RegisterPage() {
   
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,6 +32,12 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
     setStatus({ type: '', message: '' });
+
+    if (formData.password.length < 8) {
+      setStatus({ type: 'error', message: t('Kata laluan mestilah sekurang-kurangnya 8 aksara.') });
+      setIsLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirm_password) {
       setStatus({type: 'error', message: t('alert_passwords_mismatch')});
@@ -99,24 +108,42 @@ export default function RegisterPage() {
             placeholder={t('username')} 
             required 
           />
-          <input 
-            type="password" 
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
-            placeholder={t('password')} 
-            required 
-          />
-          <input
-            type="password"
-            name="confirm_password"
-            value={formData.confirm_password}
-            onChange={handleChange}
-            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            placeholder={t('confirm_password')}
-            required
-          />
+          <div className="relative">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
+              placeholder={t('password')} 
+              required 
+            />
+            <button
+              type ="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <div className="relative w-full">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirm_password"
+              value={formData.confirm_password}
+              onChange={handleChange}
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm"
+              placeholder={t('confirm_password')}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+        </div>
           <button 
             type="submit" 
             disabled={isLoading}
