@@ -81,7 +81,7 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                🇲🇾 BM
+                BM
               </button>
               <button
                 onClick={() => changeLanguage('en')}
@@ -91,7 +91,7 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                🇬🇧 EN
+                EN
               </button>
             </div>
           </div>

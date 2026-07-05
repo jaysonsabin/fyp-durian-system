@@ -10,7 +10,7 @@ export default function BottomNav({ activeModule, setActiveModule, setShowRecord
       
       {/* Records Button */}
       {!isAdmin && (
-        <button onClick={() => setActiveModule('records')} className={`flex flex-col items-center cursor-pointer ${activeModule === 'records' ? 'text-green-600' : 'text-gray-300'}`}>
+        <button onClick={() => setActiveModule('records')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'records' ? 'text-green-600' : 'text-gray-300'}`}>
           <ClipboardList size={24} className="mb-1" />
           <span className="text-[10px] font-bold uppercase">{t('records')}</span>
         </button>
@@ -18,7 +18,7 @@ export default function BottomNav({ activeModule, setActiveModule, setShowRecord
 
       {/* Yield AI Button */}
       {!isAdmin && (
-        <button onClick={() => setActiveModule('yield')} className={`flex flex-col items-center cursor-pointer ${activeModule === 'yield' ? 'text-green-600' : 'text-gray-300'}`}>
+        <button onClick={() => setActiveModule('yield')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'yield' ? 'text-green-600' : 'text-gray-300'}`}>
           <ChartLine size={24} className="mb-1" />
           <span className="text-[10px] font-bold uppercase">{t('yield_ai')}</span>
         </button>
@@ -37,13 +37,13 @@ export default function BottomNav({ activeModule, setActiveModule, setShowRecord
       )}
 
       {/* NEW: eForum Button */}
-      <button onClick={() => setActiveModule('forum')} className={`flex flex-col items-center cursor-pointer ${activeModule === 'forum' ? 'text-green-600' : 'text-gray-300'}`}>
+      <button onClick={() => setActiveModule('forum')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'forum' ? 'text-green-600' : 'text-gray-300'}`}>
         <MessageSquare size={24} className="mb-1" />
         <span className="text-[10px] font-bold uppercase">{t('forum')}</span>
       </button>
 
       {/* NEW: eLibrary Button */}
-      <button onClick={() => setActiveModule('library')} className={`flex flex-col items-center cursor-pointer ${activeModule === 'library' ? 'text-green-600' : 'text-gray-300'}`}>
+      <button onClick={() => setActiveModule('library')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'library' ? 'text-green-600' : 'text-gray-300'}`}>
         <BookOpen size={24} className="mb-1" />
         <span className="text-[10px] font-bold uppercase">{t('library')}</span>
       </button>
