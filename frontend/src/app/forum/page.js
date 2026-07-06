@@ -193,11 +193,53 @@ export default function Forum() {
       alert(t('alert_login_to_react'));
       return;
     }
+
+    // Keep a copy of the previous state in case we need to roll back
+    const previousPosts = [...posts];
+
+    // Optimistically update local state immediately (0ms latency)
+    setPosts(prevPosts => prevPosts.map(p => {
+      if (p.post_id === postId) {
+        const reactions = p.reactions || [];
+        const userLikeIndex = reactions.findIndex(r => r.user_id === user.id && r.reaction_type === "Like");
+        
+        let updatedReactions;
+        if (userLikeIndex !== -1) {
+          // Unlike: Remove the reaction locally
+          updatedReactions = reactions.filter((_, idx) => idx !== userLikeIndex);
+        } else {
+          // Like: Add a temporary reaction object locally
+          updatedReactions = [...reactions, { reaction_id: Date.now(), post_id: postId, user_id: user.id, reaction_type: "Like" }];
+        }
+        return { ...p, reactions: updatedReactions };
+      }
+      return p;
+    }));
+
     try {
-      await toggleForumReaction(postId, "Like", user.token);
-      loadPosts();
+      // Call API in background
+      const result = await toggleForumReaction(postId, "Like", user.token);
+      
+      // Update the temporary ID with the real ID from the server response
+      if (result && result.reaction_id) {
+        setPosts(prevPosts => prevPosts.map(p => {
+          if (p.post_id === postId) {
+            const reactions = p.reactions || [];
+            const updatedReactions = reactions.map(r => 
+              (r.user_id === user.id && r.reaction_type === "Like" && r.reaction_id > 1000000000000)
+                ? { ...r, reaction_id: result.reaction_id }
+                : r
+            );
+            return { ...p, reactions: updatedReactions };
+          }
+          return p;
+        }));
+      }
     } catch (err) {
       console.error("Like action failed:", err);
+      // Rollback to original state on error
+      setPosts(previousPosts);
+      alert(t('alert_failed_to_react') || "Failed to submit reaction.");
     }
   };
 
