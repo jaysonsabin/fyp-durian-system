@@ -462,7 +462,7 @@ export default function Forum() {
         </div>
 
         {/* Categories tag pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar px-2">
           {tags.map(tag => (
             <button
               key={tag}

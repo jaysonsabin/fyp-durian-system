@@ -295,7 +295,6 @@ export default function DashboardPage() {
       {/* Top Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-emerald-500/10 bg-gradient-to-r from-green-600 to-emerald-700 px-6 py-4 shadow-lg">
         <div>
-          <h2 className="text-xl font-bold text-gray-800 capitalize tracking-tight">{activeModule === 'yield' ? t('yield_ai') : t(activeModule)}</h2>
           {user?.role !== 'Pentadbir' && activeFarm && userFarms.length > 0 && (
             <div className="relative mt-1">
               <CustomSelect 

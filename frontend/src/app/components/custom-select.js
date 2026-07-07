@@ -34,8 +34,8 @@ export default function CustomSelect({
     setIsOpen(false);
   };
 
-  const defaultButtonClass = "w-full p-4 pr-11 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all flex items-center justify-between text-left shadow-sm hover:bg-gray-100/50";
-  const defaultMenuClass = "absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-[150] py-2 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 thin-scrollbar";
+  const defaultButtonClass = "w-full p-4 pr-6 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 text-sm font-semibold text-gray-700 transition-all flex items-center justify-between text-left shadow-sm hover:bg-gray-100/50";
+  const defaultMenuClass = "absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-lg shadow-xl z-[150] py-2 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 thin-scrollbar";
 
   return (
     <div className={`relative ${containerClassName}`} ref={dropdownRef}>

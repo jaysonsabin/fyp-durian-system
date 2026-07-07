@@ -19,10 +19,10 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
       });
     } catch (e) {
       return t('recent_activity');
@@ -31,21 +31,21 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
 
   const getActivityBadge = (type) => {
     switch (type) {
-      case "Fertilization": 
+      case "Fertilization":
         return { label: t('fertilization'), color: "bg-emerald-50 text-emerald-700 border-emerald-100" };
-      case "Pruning": 
+      case "Pruning":
         return { label: t('pruning'), color: "bg-blue-50 text-blue-700 border-blue-100" };
-      case "Irrigation": 
+      case "Irrigation":
         return { label: t('irrigation'), color: "bg-cyan-50 text-cyan-700 border-cyan-100" };
-      case "Weeding": 
+      case "Weeding":
         return { label: t('weeding'), color: "bg-amber-50 text-amber-700 border-amber-100" };
-      case "Pest/Disease Spraying": 
+      case "Pest/Disease Spraying":
         return { label: t('pest_spraying'), color: "bg-purple-50 text-purple-700 border-purple-100" };
-      case "Fruit Tying & Thinning": 
+      case "Fruit Tying & Thinning":
         return { label: t('fruit_tying'), color: "bg-rose-50 text-rose-700 border-rose-100" };
-      case "Harvesting": 
+      case "Harvesting":
         return { label: t('harvesting'), color: "bg-orange-50 text-orange-700 border-orange-100" };
-      default: 
+      default:
         return { label: type || t('activity_type'), color: "bg-gray-50 text-gray-700 border-gray-100" };
     }
   };
@@ -79,103 +79,90 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
           {logs.length} {logs.length === 1 ? t('record') : t('records_label')}
         </span>
       </div>
-      
+
       <div className="space-y-4">
         {logs.map((log, index) => {
           const badge = getActivityBadge(log.activity_type);
-          const borderColors = {
-            "Fertilization": "border-l-emerald-500",
-            "Pruning": "border-l-blue-500",
-            "Irrigation": "border-l-cyan-500",
-            "Weeding": "border-l-amber-500",
-            "Pest/Disease Spraying": "border-l-purple-500",
-            "Fruit Tying & Thinning": "border-l-rose-500",
-            "Harvesting": "border-l-orange-500"
-          };
-          
+
           // Force yellow border for offline records
-          const borderClass = log.pendingSync 
-            ? "border-l-amber-500 bg-amber-50/5" 
-            : (borderColors[log.activity_type] || "border-l-gray-400");
+          const borderClass = log.pendingSync
+            ? "border-l-amber-500 bg-amber-50/5"
+            : ("border-l-gray-400");
 
           return (
-            <div 
-              key={log.log_id || `offline-${index}`} 
-              className={`bg-white p-5 rounded-3xl shadow-sm border border-l-4 ${borderClass} border-y-gray-100/85 border-r-gray-100/85 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 group`}
+            <div
+              key={log.log_id || `offline-${index}`}
+              className={`bg-white p-5 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 group`}
             >
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.color}`}>
-                    <span>{badge.emoji}</span>
-                    <span>{badge.label}</span>
-                  </span>
-                  
-                  {log.pendingSync && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200 animate-pulse uppercase tracking-wider">
-                      {t('pending_sync')}
-                    </span>
-                  )}
 
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                    <Calendar size={12} className="text-gray-300" />
-                    {formatDate(log.log_date || log.createdAt)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {index === 0 && !log.pendingSync && (
-                    <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
-                      {t('latest')}
-                    </span>
-                  )}
+              <div className="flex items-start justify-between mb-1">
+                <h4 className="font-bold text-green-600 text-base leading-tight">
+                  {log.activity_type === "Fertilization" ? `${t('fertilization')}: ${log.fertilizer_type === 'Organic' ? t('organic_fertilizer') : log.fertilizer_type}` : getActivityName(log.activity_type)}
+                </h4>
+
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => !log.pendingSync && onEditLog && onEditLog(log)}
                     disabled={log.pendingSync}
-                    className={`p-1 rounded-lg transition-colors ${
-                      log.pendingSync 
-                        ? 'text-gray-200 cursor-not-allowed opacity-50' 
-                        : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer'
-                    }`}
+                    className={`p-1 rounded-lg transition-colors ${log.pendingSync
+                      ? 'text-gray-200 cursor-not-allowed opacity-50'
+                      : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer'
+                      }`}
                     title={log.pendingSync ? t('cannot_edit_offline') : t('edit_activity')}
                   >
-                    <Edit2 size={12} />
+                    <Edit2 size={14} />
                   </button>
                   <button
                     onClick={() => !log.pendingSync && onDeleteLog && onDeleteLog(log.log_id)}
                     disabled={log.pendingSync}
-                    className={`p-1 rounded-lg transition-colors ${
-                      log.pendingSync 
-                        ? 'text-gray-200 cursor-not-allowed opacity-50' 
-                        : 'text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
-                    }`}
+                    className={`p-1 rounded-lg transition-colors ${log.pendingSync
+                      ? 'text-gray-200 cursor-not-allowed opacity-50'
+                      : 'text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
+                      }`}
                     title={log.pendingSync ? t('cannot_delete_offline') : t('delete_activity')}
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
-              
-              <h4 className="font-black text-green-800 text-lg leading-tight mb-2">
-                {log.activity_type === "Fertilization" ? `${t('fertilization')}: ${log.fertilizer_type === 'Organic' ? t('organic_fertilizer') : log.fertilizer_type}` : getActivityName(log.activity_type)}
-              </h4>
-              
-              <div className={`grid ${log.activity_type === "Fertilization" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"} gap-3 bg-gray-50/50 p-3 rounded-2xl border border-gray-100 text-xs mb-3`}>
+
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[10px] font-semibold text-gray-500 tracking-wider flex items-center gap-1">
+                    <Calendar size={12} className="text-gray-400" />
+                    {formatDate(log.log_date || log.createdAt)}
+                  </span>
+                  {index === 0 && !log.pendingSync && (
+                    <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-sm font-bold tracking-wider">
+                      {t('latest')}
+                    </span>
+                  )}
+                  {log.pendingSync && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] font-bold bg-amber-100 text-amber-600 border border-amber-100 animate-pulse tracking-wider">
+                      {t('pending_sync')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className={`grid ${log.activity_type === "Fertilization" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"} gap-3 bg-gray-50/50 p-3 rounded-md border border-gray-200 text-xs mb-3`}>
                 {log.activity_type === "Fertilization" && (
                   <div>
-                    <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('amount_label')}</p>
-                    <p className="font-extrabold text-gray-700">{log.fertilizer_amount} kg</p>
+                    <p className="text-gray-500 font-bold text-[9px] tracking-wider mb-0.5">{t('amount_label')}</p>
+                    <p className="font-extrabold text-gray-600">{log.fertilizer_amount} kg</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('soil_ph')}</p>
-                  <p className="font-extrabold text-gray-700">{log.soil_ph}</p>
+                  <p className="text-gray-500 font-bold text-[9px] tracking-wider mb-0.5">{t('soil_ph')}</p>
+                  <p className="font-extrabold text-gray-600">{log.soil_ph}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('temp_label')}</p>
-                  <p className="font-extrabold text-gray-700">{log.temperature} °C</p>
+                  <p className="text-gray-500 font-bold text-[9px] tracking-wider mb-0.5">{t('temp_label')}</p>
+                  <p className="font-extrabold text-gray-600">{log.temperature} °C</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 font-bold uppercase text-[9px] tracking-wider mb-0.5">{t('rainfall_label')}</p>
-                  <p className="font-extrabold text-gray-700">{log.rainfall} mm</p>
+                  <p className="text-gray-500 font-bold text-[9px] tracking-wider mb-0.5">{t('rainfall_label')}</p>
+                  <p className="font-extrabold text-gray-600">{log.rainfall} mm</p>
                 </div>
               </div>
 

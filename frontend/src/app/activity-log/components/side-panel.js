@@ -6,35 +6,20 @@ import { useLanguage } from '@/app/context/language_context';
 export default function ProfilePanel({ isOpen, onClose, onLogout }) {
   const router = useRouter();
   const { language, changeLanguage, t } = useLanguage();
-  const [shouldRender, setShouldRender] = useState(isOpen);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-    } else {
-      const timer = setTimeout(() => setShouldRender(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  if (!shouldRender) return null;
-
+  
   return (
-    <div className={`fixed inset-0 z-[300] flex justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`fixed inset-0 z-[300] flex justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
       
       {/* Backdrop */}
       <div 
-        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'animate-in fade-in' : 'animate-out fade-out'}`} 
-        onClick={onClose}
+      className={`absolute inset-0 bg-black/30 backdrop-blur-xs transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`} 
+      onClick={onClose}
       ></div>
 
       {/* Main Drawer Panel */}
       <div 
-        className={`w-[80%] max-w-sm bg-white h-full shadow-2xl flex flex-col relative z-10 duration-300 ease-in-out
-          ${isOpen 
-            ? 'animate-in slide-in-from-right' 
-            : 'animate-out slide-out-to-right'
-          }`}
+      className={`w-[60%] max-w-sm bg-white h-full shadow-2xl flex flex-col relative z-10 transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         
         {/* Panel Header */}
@@ -55,15 +40,15 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
               onClose();
               router.push('/profile');
             }}
-            className="flex items-center justify-between w-full p-4 rounded-2xl hover:bg-gray-50 text-left transition-colors group"
+            className="flex items-center justify-between w-full p-2 rounded-2xl hover:bg-gray-50 text-left transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-green-50 text-green-600 p-2.5 rounded-xl group-hover:bg-green-100 transition-colors">
-                <Settings size={18} />
+              <div className="bg-green-50 text-green-600 p-1.5 rounded-xl group-hover:bg-green-100 transition-colors">
+                <Settings size={16} />
               </div>
-              <span className="font-semibold text-gray-700">{t('edit_profile_farms')}</span>
+              <span className="text-xs font-semibold text-gray-700">{t('edit_profile_farms')}</span>
             </div>
-            <ChevronRight size={18} className="text-gray-300 group-hover:text-green-600 transition-colors" />
+            <ChevronRight size={16} className="text-gray-300 group-hover:text-green-600 transition-colors" />
           </button>
 
           {/* Language Selector Block */}
@@ -101,7 +86,7 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
         <div className="p-6 border-t border-gray-100">
           <button 
             onClick={onLogout} 
-            className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-red-50 text-red-500 font-bold hover:bg-red-100 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-2 w-full p-4 rounded-lg bg-red-50 text-red-500 font-bold hover:bg-red-100 transition-colors cursor-pointer"
           >
             <LogOut size={18} />
             {t('sign_out')}
