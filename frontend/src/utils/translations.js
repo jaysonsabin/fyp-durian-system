@@ -243,6 +243,13 @@ export const translations = {
     no_resources_available: "Tiada sumber tersedia",
     empty_filtering_desc: "Cuba laraskan kata kunci anda atau padamkan penapis kategori anda.",
     empty_no_resources_desc: "Semak semula kemudian untuk panduan dan pautan media yang baru diterbitkan!",
+    ops_summary: "Ringkasan Operasi",
+    fertilizer_applied: "Jumlah Pembajaan",
+    watering_frequency: "Penyiraman",
+    pest_sprays: "Semburan Racun",
+    others: "Lain-lain",
+    edit_label: "Ubah",
+    delete_label: "Padam",
   },
   en: {
     // Navigation / General
@@ -488,5 +495,12 @@ export const translations = {
     no_resources_available: "No resources available",
     empty_filtering_desc: "Try adjusting your keywords or clearing your category filters.",
     empty_no_resources_desc: "Check back later for newly published guides and media links!",
+    ops_summary: "Operations Summary",
+    fertilizer_applied: "Fertilizer Applied",
+    watering_frequency: "Watering Frequency",
+    pest_sprays: "Pest Sprays",
+    others: "Others",
+    edit_label: "Edit",
+    delete_label: "Delete"
   }
 };
