@@ -131,7 +131,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
       
       {/* Dynamic Summary Dashboard Panel */}
       <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-        <span className="text-[12px] font-bold text-gray-400 uppercase tracking-widest block mb-3">
+        <span className="text-[12px] font-bold text-gray-400 uppercase tracking-wider block mb-3">
           {t('ops_summary')} ({currentMonthName} {currentYear})
         </span>
         <div className="grid grid-cols-3 gap-3">
@@ -172,7 +172,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
 
       {/* Accordion List Header */}
       <div className="flex justify-between items-center px-1">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">{t('activity_history_title')}</h3>
+        <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">{t('activity_history_title')}</h3>
         <span className="text-[10px] bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider font-mono">
           {filteredLogs.length} {filteredLogs.length === 1 ? t('record') : t('records_label')}
         </span>
@@ -196,7 +196,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
               >
                 <div className="flex items-center gap-2">
                   {isMonthOpen ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-400" />}
-                  <span>{monthKey}</span>
+                  <span className="text-green-800">{monthKey}</span>
                 </div>
                 <span className="text-[10px] bg-gray-200/80 text-gray-600 px-2 py-0.5 rounded-full font-bold font-mono">
                   {monthLogs.length}
