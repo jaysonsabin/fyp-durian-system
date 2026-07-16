@@ -216,13 +216,13 @@ export default function YieldPredictor({ activeFarm }) {
           </div>
 
           {/* AI Recommendation Context Box */}
-          <div className="bg-green-50/50 p-5 rounded-lg border border-green-100/40 flex gap-3.5">
+          {/*<div className="bg-green-50/50 p-5 rounded-lg border border-green-100/40 flex gap-3.5">
             <Bot size={22} className="text-green-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-green-800 leading-relaxed font-semibold">
               <p className="font-bold uppercase text-[10px] text-green-700 tracking-wider mb-1">{t('ai_reco_title')}</p>
               {prediction.recommendation}
             </div>
-          </div>
+          </div> */}
 
         </div>
       )}

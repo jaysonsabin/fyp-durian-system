@@ -4,7 +4,7 @@ export const translations = {
     records: "Rekod",
     yield_ai: "Ramalan Hasil",
     forum: "Forum",
-    library: "Perpustakaan",
+    library: "Pustaka",
     sign_out: "Log Keluar",
     edit_profile_farms: "Edit Profil & Ladang",
     account: "Akaun",

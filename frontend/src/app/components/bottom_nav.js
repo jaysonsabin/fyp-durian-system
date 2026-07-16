@@ -20,7 +20,7 @@ export default function BottomNav({ activeModule, setActiveModule, setShowRecord
       {!isAdmin && (
         <button onClick={() => setActiveModule('yield')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'yield' ? 'text-green-600' : 'text-gray-500'}`}>
           <ChartLine size={24} className="mb-1" />
-          <span className="text-[11px] font-bold uppercase">{t('yield_ai')}</span>
+          <span className="text-[11px] font-bold uppercase">Hasil</span>
         </button>
       )}
 
