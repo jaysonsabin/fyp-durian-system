@@ -3,6 +3,7 @@ import { X, Info, Beaker, Thermometer, Droplets, Bot, Save } from 'lucide-react'
 import { fetchCurrentWeather } from '@/services/dashboard';
 import CustomSelect from '@/app/components/custom-select';
 import { useLanguage } from '@/app/context/language_context';
+import { useToast } from '@/app/context/toast_context';
 
 const activityTypeOptions = [
   { value: "Fertilization", label: "Fertilization (Pembajaan)"},
@@ -29,6 +30,7 @@ const pestControlOptions = [
 
 export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, editingLog, logs }) {
   const { t } = useLanguage();
+  const { showToast } = useToast();
 
   const translatedActivityTypeOptions = activityTypeOptions.map(opt => {
     let label = opt.label;
@@ -156,7 +158,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
             log_date: new Date().toISOString() // Pre-fill log_date so the UI renders it nicely
           };
           await saveOfflineLog(offlinePayload);
-          alert(t('saved_offline_msg'));
+          showToast(t('saved_offline_msg'));
           
           // Reset form fields
           setFormData({
@@ -175,7 +177,7 @@ export default function ActivityModal({ isOpen, onClose, activeFarm, onSubmit, e
           }
         } catch (dbErr) {
           console.error("Failed to save log offline:", dbErr);
-          alert(t('failed_offline_save') + dbErr.message);
+          showToast(t('failed_offline_save') + dbErr.message, "error");
         } finally {
           setTimeout(() => {
             submittingRef.current = false;

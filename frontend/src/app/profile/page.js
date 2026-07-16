@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/auth_context';
 import { useLanguage } from '@/app/context/language_context';
+import { useToast } from '@/app/context/toast_context';
+import { useConfirm } from '@/app/context/confirm_context';
 import { 
   ArrowLeft, User, MapPin, Save, Plus, 
   Home, Sprout, ShieldCheck, Edit2, Trash2, Check, X 
@@ -15,6 +17,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   // -- UI States --
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -59,7 +63,7 @@ export default function ProfilePage() {
 
   const handleSaveFarm = async (farmId) => {
     if (!editFarmData.farm_name.trim() || !editFarmData.farm_location.trim()) {
-      alert(t('alert_farm_fields_empty'));
+      showToast(t('alert_farm_fields_empty'), "error");
       return;
     }
     setIsUpdatingFarm(true);
@@ -67,26 +71,30 @@ export default function ProfilePage() {
       await updateFarm(farmId, editFarmData, user.token);
       setEditingFarmId(null);
       fetchFarms();
-      alert(t('alert_farm_updated'));
+      showToast(t('alert_farm_updated'));
     } catch (error) {
       console.error("Error updating farm:", error);
-      alert(t('alert_farm_update_failed'));
+      showToast(t('alert_farm_update_failed'), "error");
     } finally {
       setIsUpdatingFarm(false);
     }
   };
 
   const handleDeleteFarm = async (farmId) => {
-    const message = t('confirm_delete_farm');
-    if (window.confirm(message)) {
-      try {
-        await deleteFarm(farmId, user.token);
-        fetchFarms();
-        alert(t('alert_farm_deleted'));
-      } catch (error) {
-        console.error("Error deleting farm:", error);
-        alert(t('alert_farm_delete_failed'));
-      }
+    const ok = await confirm({
+      title: t('delete_plantation'),
+      message: t('confirm_delete_farm'),
+      confirmLabel: t('delete'),
+      cancelLabel: t('cancel')
+    });
+    if (!ok) return;
+    try {
+      await deleteFarm(farmId, user.token);
+      fetchFarms();
+      showToast(t('alert_farm_deleted'));
+    } catch (error) {
+      console.error("Error deleting farm:", error);
+      showToast(t('alert_farm_delete_failed'), "error");
     }
   };
 
@@ -163,13 +171,13 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        alert(t('alert_profile_synced'));
+        showToast(t('alert_profile_synced'));
       } else {
-        alert(t('alert_profile_sync_failed'));
+        showToast(t('alert_profile_sync_failed'), "error");
       }
     } catch (error) {
       console.error("Network error saving profile:", error);
-      alert(t('alert_cannot_connect'));
+      showToast(t('alert_cannot_connect'), "error");
     } finally {
       setIsSavingProfile(false);
     }
@@ -196,13 +204,14 @@ export default function ProfilePage() {
 
       if (response.ok) {
         setNewFarmData({ farm_name: '', farm_location: '' });
-        fetchFarms(); 
-        alert(t('alert_farm_added'));
+        fetchFarms();
+        showToast(t('alert_farm_added'));
       } else {
-        alert(t('alert_farm_add_failed'));
+        showToast(t('alert_farm_add_failed'), "error");
       }
     } catch (error) {
       console.error("Network error:", error);
+      showToast(t('alert_cannot_connect'), "error");
     } finally {
       setIsAddingFarm(false);
     }

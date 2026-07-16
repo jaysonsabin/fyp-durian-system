@@ -11,6 +11,8 @@ import BottomNav from '@/app/components/bottom_nav';
 import Library from '@/app/e-library/page';
 import { useAuth } from '@/app/context/auth_context';
 import { useLanguage } from '@/app/context/language_context';
+import { useToast } from '@/app/context/toast_context';
+import { useConfirm } from '@/app/context/confirm_context';
 
 // Dashboard Modular Subcomponents
 import FarmCreationLock from '@/app/activity-log/components/farm-creation-lock';
@@ -27,6 +29,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   
   // Navigation and Modal Visibility States
   const [activeModule, setActiveModule] = useState('records');
@@ -205,7 +209,7 @@ export default function DashboardPage() {
       await fetchFarmsData();
     } catch (error) {
       console.error("Error creating first farm:", error);
-      alert(t('alert_farm_create_failed'));
+      showToast(t('alert_farm_create_failed'), "error");
       throw error;
     }
   };
@@ -232,10 +236,10 @@ export default function DashboardPage() {
       if (editingLog) {
         await updateActivityLog(editingLog.log_id, formData, user.token);
         setEditingLog(null);
-        alert(t('alert_log_updated'));
+        showToast(t('alert_log_updated'));
       } else {
         await createActivityLog(formData, user.token);
-        alert(t('alert_log_saved'));
+        showToast(t('alert_log_saved'));
       }
       setShowRecordModal(false);
       if (activeFarm) {
@@ -243,7 +247,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error saving activity:", error);
-      alert(t('alert_log_save_failed'));
+      showToast(t('alert_log_save_failed'), "error");
       throw error;
     }
   };
@@ -254,17 +258,22 @@ export default function DashboardPage() {
   };
 
   const handleDeleteLog = async (logId) => {
-    if (window.confirm(t('confirm_delete_log'))) {
-      try {
-        await deleteActivityLog(logId, user.token);
-        if (activeFarm) {
-          fetchLogsData(activeFarm.farm_id);
-        }
-        alert(t('alert_log_deleted'));
-      } catch (error) {
-        console.error("Error deleting log:", error);
-        alert(t('alert_log_delete_failed'));
+    const ok = await confirm({
+      title: t('delete_activity'),
+      message: t('confirm_delete_log'),
+      confirmLabel: t('delete'),
+      cancelLabel: t('cancel')
+    });
+    if (!ok) return;
+    try {
+      await deleteActivityLog(logId, user.token);
+      if (activeFarm) {
+        fetchLogsData(activeFarm.farm_id);
       }
+      showToast(t('alert_log_deleted'));
+    } catch (error) {
+      console.error("Error deleting log:", error);
+      showToast(t('alert_log_delete_failed'), "error");
     }
   };
 

@@ -5,6 +5,8 @@ import { BookOpen, FileText, Video, ExternalLink, Search, X, Heart, Bookmark, Do
 import { useAuth } from "@/app/context/auth_context";
 import CustomSelect from "@/app/components/custom-select";
 import { useLanguage } from "@/app/context/language_context";
+import { useToast } from "@/app/context/toast_context";
+import { useConfirm } from "@/app/context/confirm_context";
 
 const resourceTypeOptions = [
   { value: "PDF", label: "PDF Guide"},
@@ -30,6 +32,8 @@ export default function Library() {
 
   const { user } = useAuth();
   const isAdmin = user?.role === "Pentadbir";
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   // Admin Resource Manager modal & form states
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -90,7 +94,7 @@ export default function Library() {
 
   const handleResourceClick = async (content) => {
     if (!content.media_url) {
-      alert(t('no_file_linked'));
+      showToast(t('no_file_linked'), "error");
       return;
     }
 
@@ -122,7 +126,7 @@ export default function Library() {
     e.stopPropagation();
     if (!user) return;
     if (user.role === "Pentadbir") {
-      alert(t('admin_like_alert'));
+      showToast(t('admin_like_alert'), "error");
       return;
     }
 
@@ -173,7 +177,7 @@ export default function Library() {
     e.stopPropagation();
     if (!user) return;
     if (user.role === "Pentadbir") {
-      alert(t('admin_bookmark_alert'));
+      showToast(t('admin_bookmark_alert'), "error");
       return;
     }
 
@@ -223,7 +227,7 @@ export default function Library() {
   const handleDownload = async (content, e) => {
     e.stopPropagation();
     if (!content.media_url) {
-      alert(t('no_file_linked'));
+      showToast(t('no_file_linked'), "error");
       return;
     }
 
@@ -275,10 +279,10 @@ export default function Library() {
       resetForm();
       const data = await fetchLibraryContents();
       setContents(data);
-      alert(t('resource_uploaded'));
+      showToast(t('resource_uploaded'));
     } catch (err) {
       console.error(err);
-      alert(t('resource_upload_failed'));
+      showToast(t('resource_upload_failed'), "error");
     }
   };
 
@@ -299,26 +303,31 @@ export default function Library() {
       resetForm();
       const data = await fetchLibraryContents();
       setContents(data);
-      alert(t('resource_updated'));
+      showToast(t('resource_updated'));
     } catch (err) {
       console.error(err);
-      alert(t('resource_update_failed'));
+      showToast(t('resource_update_failed'), "error");
     }
   };
 
   const handleDeleteResource = async (contentId, e) => {
     e.stopPropagation();
     if (!user) return;
-    if (window.confirm(t('confirm_delete_resource'))) {
-      try {
-        await deleteLibraryContent(contentId);
-        const data = await fetchLibraryContents();
-        setContents(data);
-        alert(t('resource_deleted'));
-      } catch (err) {
-        console.error(err);
-        alert(t('resource_delete_failed'));
-      }
+    const ok = await confirm({
+      title: t('delete_resource'),
+      message: t('confirm_delete_resource'),
+      confirmLabel: t('delete'),
+      cancelLabel: t('cancel')
+    });
+    if (!ok) return;
+    try {
+      await deleteLibraryContent(contentId);
+      const data = await fetchLibraryContents();
+      setContents(data);
+      showToast(t('resource_deleted'));
+    } catch (err) {
+      console.error(err);
+      showToast(t('resource_delete_failed'), "error");
     }
   };
 

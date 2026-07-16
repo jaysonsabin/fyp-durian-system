@@ -9,8 +9,8 @@ import { useAuth } from '@/app/context/auth_context';
 import { useLanguage } from '@/app/context/language_context';
 import CustomSelect from '@/app/components/custom-select';
 import { uploadForumImage } from '@/services/storage';
-import { useToasts, ToastStack } from '@/app/components/toast';
-import ConfirmDialog from '@/app/components/confirm-dialog';
+import { useToast } from '@/app/context/toast_context';
+import { useConfirm } from '@/app/context/confirm_context';
 import { compressImage, MAX_IMAGE_SIZE_MB } from '@/utils/image_utils';
 
 const forumTagOptions = [
@@ -119,10 +119,9 @@ export default function Forum() {
   const [editingReplyId, setEditingReplyId] = useState(null);
   const [editReplyText, setEditReplyText] = useState("");
 
-  // UI feedback states
-  const { toasts, showToast, dismissToast } = useToasts();
-  const [confirmDialog, setConfirmDialog] = useState(null); // { title, message, onConfirm }
-  const [isConfirmBusy, setIsConfirmBusy] = useState(false);
+  // UI feedback (global toast + confirm systems)
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
   // Object URLs for image previews (revoked on change/unmount to avoid leaks)
@@ -284,26 +283,23 @@ export default function Forum() {
     }
   };
 
-  const handleDeletePost = (postId) => {
+  const handleDeletePost = async (postId) => {
     if (!user) return;
-    setConfirmDialog({
+    const ok = await confirm({
       title: t('delete_post'),
       message: t('confirm_delete_post'),
-      onConfirm: async () => {
-        setIsConfirmBusy(true);
-        try {
-          await deleteForumPost(postId, user.token);
-          setPosts(prev => prev.filter(p => p.post_id !== postId));
-          showToast(t('toast_post_deleted'));
-        } catch (err) {
-          console.error("Failed to delete post:", err);
-          showToast(t('alert_failed_delete_post'), "error");
-        } finally {
-          setIsConfirmBusy(false);
-          setConfirmDialog(null);
-        }
-      }
+      confirmLabel: t('delete'),
+      cancelLabel: t('cancel')
     });
+    if (!ok) return;
+    try {
+      await deleteForumPost(postId, user.token);
+      setPosts(prev => prev.filter(p => p.post_id !== postId));
+      showToast(t('toast_post_deleted'));
+    } catch (err) {
+      console.error("Failed to delete post:", err);
+      showToast(t('alert_failed_delete_post'), "error");
+    }
   };
 
   const handleLike = async (postId, e) => {
@@ -404,26 +400,23 @@ export default function Forum() {
     }
   };
 
-  const handleDeleteReply = (postId, replyId) => {
+  const handleDeleteReply = async (postId, replyId) => {
     if (!user) return;
-    setConfirmDialog({
+    const ok = await confirm({
       title: t('delete_reply'),
       message: t('confirm_delete_reply'),
-      onConfirm: async () => {
-        setIsConfirmBusy(true);
-        try {
-          await deleteForumReply(replyId, user.token);
-          updatePostReplies(postId, replies => replies.filter(r => r.reply_id !== replyId));
-          showToast(t('toast_reply_deleted'));
-        } catch (err) {
-          console.error("Failed to delete reply:", err);
-          showToast(t('alert_failed_delete_reply'), "error");
-        } finally {
-          setIsConfirmBusy(false);
-          setConfirmDialog(null);
-        }
-      }
+      confirmLabel: t('delete'),
+      cancelLabel: t('cancel')
     });
+    if (!ok) return;
+    try {
+      await deleteForumReply(replyId, user.token);
+      updatePostReplies(postId, replies => replies.filter(r => r.reply_id !== replyId));
+      showToast(t('toast_reply_deleted'));
+    } catch (err) {
+      console.error("Failed to delete reply:", err);
+      showToast(t('alert_failed_delete_reply'), "error");
+    }
   };
 
   const handleLockPost = async (postId) => {
@@ -1229,20 +1222,6 @@ export default function Forum() {
         </div>
       )}
 
-      {/* Delete confirmation dialog */}
-      <ConfirmDialog
-        open={!!confirmDialog}
-        title={confirmDialog?.title}
-        message={confirmDialog?.message}
-        confirmLabel={t('delete')}
-        cancelLabel={t('cancel')}
-        onConfirm={confirmDialog?.onConfirm}
-        onCancel={() => setConfirmDialog(null)}
-        isBusy={isConfirmBusy}
-      />
-
-      {/* Toast notifications */}
-      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

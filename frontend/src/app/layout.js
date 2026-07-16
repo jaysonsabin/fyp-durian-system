@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/app/context/auth_context";
 import { LanguageProvider } from "@/app/context/language_context";
+import { ToastProvider } from "@/app/context/toast_context";
+import { ConfirmProvider } from "@/app/context/confirm_context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,7 +44,11 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
           <AuthProvider>
-            {children}
+            <ConfirmProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </ConfirmProvider>
           </AuthProvider>
         </LanguageProvider>
       </body>

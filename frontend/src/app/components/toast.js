@@ -1,32 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef } from 'react';
 import { CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 /**
- * Lightweight toast notifications.
- * Usage:
- *   const { toasts, showToast, dismissToast } = useToasts();
- *   showToast("Saved!", "success");  // or "error"
- *   <ToastStack toasts={toasts} onDismiss={dismissToast} />
+ * Presentational toast stack. Rendered once by ToastProvider
+ * (see context/toast_context.js) — call useToast() to show toasts.
  */
-export function useToasts() {
-  const [toasts, setToasts] = useState([]);
-  const idRef = useRef(0);
-
-  const dismissToast = useCallback((id) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
-
-  const showToast = useCallback((message, type = "success") => {
-    const id = ++idRef.current;
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => dismissToast(id), 4000);
-  }, [dismissToast]);
-
-  return { toasts, showToast, dismissToast };
-}
-
 export function ToastStack({ toasts, onDismiss }) {
   if (!toasts.length) return null;
 
