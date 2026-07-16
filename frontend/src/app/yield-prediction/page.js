@@ -158,7 +158,7 @@ export default function YieldPredictor({ activeFarm }) {
           <div className="grid grid-cols-1 gap-4">
             
             {/* Random Forest Regressor Model Card */}
-            <div className="bg-white p-5 rounded-lg border-2 border-green-500/20 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg">
+            <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Random Forest Model</span>
                 <span className="text-[10px] font-bold text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
