@@ -155,14 +155,18 @@ export default function YieldPredictor({ activeFarm }) {
             </h4>
           </div>
 
+          <p className="text-[11px] text-gray-500 italic leading-relaxed -mt-2 px-1">
+            {t('yield_disclaimer')}
+          </p>
+
           <div className="grid grid-cols-1 gap-4">
             
             {/* Random Forest Regressor Model Card */}
             <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Random Forest Model</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('random_forest')}</span>
                 <span className="text-[10px] font-bold text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
-                  {t('accuracy').toUpperCase()}: {prediction.random_forest.accuracy}%
+                  {t('model_fit')}: {prediction.random_forest.accuracy}%
                 </span>
               </div>
               <div className="flex items-baseline justify-start gap-1 py-1">
@@ -171,15 +175,15 @@ export default function YieldPredictor({ activeFarm }) {
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3 bg-gray-50 p-3.5 rounded-lg border border-gray-100">
                 <div className="text-center">
-                  <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade A</span>
+                  <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('grade_a')}</span>
                   <p className="font-bold text-gray-700 mt-1.5 text-xs">{prediction.random_forest.grade_a} kg</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade B</span>
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('grade_b')}</span>
                   <p className="font-bold text-gray-700 mt-1.5 text-xs">{prediction.random_forest.grade_b} kg</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade C</span>
+                  <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('grade_c')}</span>
                   <p className="font-bold text-gray-700 mt-1.5 text-xs">{prediction.random_forest.grade_c} kg</p>
                 </div>
               </div>
@@ -188,9 +192,9 @@ export default function YieldPredictor({ activeFarm }) {
             {/* Linear Regression Model Card */}
             <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Linear Regression Model</span>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('linear_regression')}</span>
                 <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                  {t('accuracy').toUpperCase()}: {prediction.linear_regression.accuracy}%
+                  {t('model_fit')}: {prediction.linear_regression.accuracy}%
                 </span>
               </div>
               <div className="flex items-baseline justify-start gap-1 py-1">
@@ -199,15 +203,15 @@ export default function YieldPredictor({ activeFarm }) {
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3 bg-gray-50 p-3.5 rounded-lg border border-gray-100">
                 <div className="text-center">
-                  <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade A</span>
+                  <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('grade_a')}</span>
                   <p className="font-bold text-gray-700 mt-1.5 text-xs">{prediction.linear_regression.grade_a} kg</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade B</span>
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('grade_b')}</span>
                   <p className="font-bold text-gray-700 mt-1.5 text-xs">{prediction.linear_regression.grade_b} kg</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Grade C</span>
+                  <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('grade_c')}</span>
                   <p className="font-bold text-gray-700 mt-1.5 text-xs">{prediction.linear_regression.grade_c} kg</p>
                 </div>
               </div>
