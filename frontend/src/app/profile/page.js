@@ -214,9 +214,10 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <header className="bg-white px-6 py-4 flex items-center gap-4 shadow-sm sticky top-0 z-20">
-        <button 
+        <button
           onClick={() => router.push('/activity-log')}
-          className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors"
+          aria-label={t('cancel')}
+          className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors cursor-pointer"
         >
           <ArrowLeft size={20} />
         </button>
@@ -227,36 +228,36 @@ export default function ProfilePage() {
         
         {/* Telemetry Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-lg flex items-center justify-center">
               <Sprout size={22} />
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('my_plantations')}</span>
-              <span className="text-lg font-black text-gray-800">{farms.length} {t('active')}</span>
+              <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('my_plantations')}</span>
+              <span className="text-lg font-bold text-gray-800">{farms.length} {t('active')}</span>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl flex items-center justify-center">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg flex items-center justify-center">
               <ShieldCheck size={22} />
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('account')}</span>
-              <span className="text-lg font-black text-gray-800">{user?.role === 'Pentadbir' ? t('admin_status') : t('verified_grower')}</span>
+              <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('account')}</span>
+              <span className="text-lg font-bold text-gray-800">{user?.role === 'Pentadbir' ? t('admin_status') : t('verified_grower')}</span>
             </div>
           </div>
         </div>
 
         {/* Profile Section */}
-        <section className="bg-white p-6 md:p-8 rounded-[32px] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-lg flex items-center justify-center">
               <User size={22} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800">{t('personal_details')}</h3>
-              <p className="text-sm text-gray-500">{t('update_profile')}</p>
+              <h3 className="text-[12px] font-bold text-gray-600 uppercase tracking-wider">{t('personal_details')}</h3>
+              <p className="text-xs text-gray-500 mt-1">{t('update_profile')}</p>
             </div>
           </div>
 
@@ -270,7 +271,7 @@ export default function ProfilePage() {
                 onChange={handleProfileChange}
                 placeholder="e.g., Ahmad Bin Abdullah"
                 required
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white transition-all text-sm font-semibold text-gray-800 placeholder-gray-400"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white transition-all text-sm font-semibold text-gray-800 placeholder-gray-400"
               />
             </div>
             <div>
@@ -282,16 +283,16 @@ export default function ProfilePage() {
                 rows="2"
                 placeholder="Your residential address..."
                 required
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white transition-all text-sm font-semibold text-gray-800 placeholder-gray-400 resize-none"
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white transition-all text-sm font-semibold text-gray-800 placeholder-gray-400 resize-none"
               ></textarea>
             </div>
             <button 
               type="submit" 
               disabled={isSavingProfile}
-              className={`w-full text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-600/10 transition-all active:scale-95 cursor-pointer ${
-                isSavingProfile 
-                  ? 'bg-gray-400 cursor-not-allowed shadow-none' 
-                  : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+              className={`w-full text-white py-4 rounded-lg font-bold shadow-lg shadow-green-600/10 transition-all active:scale-95 cursor-pointer ${
+                isSavingProfile
+                  ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                  : 'bg-green-600 hover:bg-green-700'
               }`}
             >
               {isSavingProfile ? t('saving') : t('save_changes')}
@@ -300,15 +301,15 @@ export default function ProfilePage() {
         </section>
 
         {/* Farm Management Section */}
-        <section className="bg-white p-6 md:p-8 rounded-[32px] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3 sm:gap-0">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-100 rounded-lg flex items-center justify-center">
                 <Sprout size={22} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">{t('my_plantations')}</h3>
-                <p className="text-sm text-gray-500">{t('manage_locations')}</p>
+                <h3 className="text-[12px] font-bold text-gray-600 uppercase tracking-wider">{t('my_plantations')}</h3>
+                <p className="text-xs text-gray-500 mt-1">{t('manage_locations')}</p>
               </div>
             </div>
             <div className="bg-green-50 text-green-700 px-3 py-1 rounded-lg font-bold text-sm">
@@ -318,7 +319,7 @@ export default function ProfilePage() {
 
           <div className="space-y-3 mb-8">
             {farms.length === 0 ? (
-              <div className="text-center p-6 bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-400 text-sm font-medium">
+              <div className="text-center p-6 bg-gray-50 border border-dashed border-gray-200 rounded-lg text-gray-500 text-sm font-medium">
                 {t('no_plantations')}
               </div>
             ) : (
@@ -327,7 +328,7 @@ export default function ProfilePage() {
                 return (
                   <div 
                     key={farm.farm_id} 
-                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-2xl transition-all ${
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg transition-all ${
                       isEditing 
                         ? 'border-green-500 bg-green-50/20' 
                         : 'border-gray-100 hover:border-green-200 hover:bg-green-50/50'
@@ -341,7 +342,7 @@ export default function ProfilePage() {
                           value={editFarmData.farm_name}
                           onChange={handleEditFarmChange}
                           placeholder={t('plantation_name')}
-                          className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
+                          className="flex-1 p-2 bg-white border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
                         />
                         <input
                           type="text"
@@ -349,12 +350,12 @@ export default function ProfilePage() {
                           value={editFarmData.farm_location}
                           onChange={handleEditFarmChange}
                           placeholder={t('location_region')}
-                          className="flex-1 p-2 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
+                          className="flex-1 p-2 bg-white border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold text-gray-700"
                         />
                       </div>
                     ) : (
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gray-50 border border-gray-100 text-gray-400 rounded-full flex items-center justify-center transition-colors">
+                        <div className="w-10 h-10 bg-gray-50 border border-gray-100 text-gray-500 rounded-full flex items-center justify-center transition-colors">
                           <Home size={18} />
                         </div>
                         <div>
@@ -363,7 +364,7 @@ export default function ProfilePage() {
                             <MapPin size={10} className="text-green-600" />
                             <span>{farm.farm_location}</span>
                             {farm.latitude !== null && farm.longitude !== null && (
-                              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-bold font-mono">
+                              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono">
                                 GPS: {Number(farm.latitude).toFixed(4)}, {Number(farm.longitude).toFixed(4)}
                               </span>
                             )}
@@ -378,14 +379,16 @@ export default function ProfilePage() {
                           <button
                             onClick={() => handleSaveFarm(farm.farm_id)}
                             disabled={isUpdatingFarm}
-                            className="p-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+                            aria-label={t('save_changes')}
                             title={t('save_changes')}
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={handleCancelEditFarm}
-                            className="p-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+                            className="p-2 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                            aria-label={t('cancel')}
                             title={t('cancel')}
                           >
                             <X size={16} />
@@ -395,14 +398,16 @@ export default function ProfilePage() {
                         <>
                           <button
                             onClick={() => handleStartEditFarm(farm)}
-                            className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-green-50 hover:text-green-600 transition-colors cursor-pointer"
+                            className="p-2 bg-gray-50 text-gray-500 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors cursor-pointer"
+                            aria-label={t('edit_plantation')}
                             title={t('edit_plantation')}
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteFarm(farm.farm_id)}
-                            className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                            className="p-2 bg-gray-50 text-gray-500 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                            aria-label={t('delete_plantation')}
                             title={t('delete_plantation')}
                           >
                             <Trash2 size={16} />
@@ -430,7 +435,7 @@ export default function ProfilePage() {
                   onChange={handleFarmChange}
                   placeholder={t('plantation_name')}
                   required
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <input 
                   type="text" 
@@ -439,13 +444,13 @@ export default function ProfilePage() {
                   onChange={handleFarmChange}
                   placeholder={t('location_region')}
                   required
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <button 
                 type="submit" 
                 disabled={isAddingFarm}
-                className={`w-full text-white py-4 rounded-2xl font-bold shadow-md transition-all ${isAddingFarm ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                className={`w-full text-white py-4 rounded-lg font-bold shadow-md transition-all ${isAddingFarm ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
               >
                 {isAddingFarm ? t('adding') : t('add_plantation')}
               </button>

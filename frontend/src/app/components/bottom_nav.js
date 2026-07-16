@@ -10,26 +10,27 @@ export default function BottomNav({ activeModule, setActiveModule, setShowRecord
       
       {/* Records Button */}
       {!isAdmin && (
-        <button onClick={() => setActiveModule('records')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'records' ? 'text-green-600' : 'text-gray-300'}`}>
+        <button onClick={() => setActiveModule('records')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'records' ? 'text-green-600' : 'text-gray-500'}`}>
           <ClipboardList size={24} className="mb-1" />
-          <span className="text-[10px] font-bold uppercase">{t('records')}</span>
+          <span className="text-[11px] font-bold uppercase">{t('records')}</span>
         </button>
       )}
 
       {/* Yield AI Button */}
       {!isAdmin && (
-        <button onClick={() => setActiveModule('yield')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'yield' ? 'text-green-600' : 'text-gray-300'}`}>
+        <button onClick={() => setActiveModule('yield')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'yield' ? 'text-green-600' : 'text-gray-500'}`}>
           <ChartLine size={24} className="mb-1" />
-          <span className="text-[10px] font-bold uppercase">{t('yield_ai')}</span>
+          <span className="text-[11px] font-bold uppercase">{t('yield_ai')}</span>
         </button>
       )}
 
       {/* Floating Action Button (Center) */}
       {!isAdmin && (
         <div className="relative -top-7">
-          <button 
-            onClick={() => setShowRecordModal(true)} 
-            className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center shadow-xl border-4 border-white active:scale-90 transition-transform cursor-pointer"
+          <button
+            onClick={() => setShowRecordModal(true)}
+            aria-label={t('records')}
+            className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center shadow-xl border-4 border-white active:scale-90 transition-transform cursor-pointer"
           >
             <Plus size={32} strokeWidth={3} />
           </button>
@@ -37,15 +38,15 @@ export default function BottomNav({ activeModule, setActiveModule, setShowRecord
       )}
 
       {/* NEW: eForum Button */}
-      <button onClick={() => setActiveModule('forum')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'forum' ? 'text-green-600' : 'text-gray-300'}`}>
+      <button onClick={() => setActiveModule('forum')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'forum' ? 'text-green-600' : 'text-gray-500'}`}>
         <MessageSquare size={24} className="mb-1" />
-        <span className="text-[10px] font-bold uppercase">{t('forum')}</span>
+        <span className="text-[11px] font-bold uppercase">{t('forum')}</span>
       </button>
 
       {/* NEW: eLibrary Button */}
-      <button onClick={() => setActiveModule('library')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'library' ? 'text-green-600' : 'text-gray-300'}`}>
+      <button onClick={() => setActiveModule('library')} className={`w-20 text-center flex flex-col items-center cursor-pointer ${activeModule === 'library' ? 'text-green-600' : 'text-gray-500'}`}>
         <BookOpen size={24} className="mb-1" />
-        <span className="text-[10px] font-bold uppercase">{t('library')}</span>
+        <span className="text-[11px] font-bold uppercase">{t('library')}</span>
       </button>
 
     </nav>

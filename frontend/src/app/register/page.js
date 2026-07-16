@@ -76,7 +76,7 @@ export default function RegisterPage() {
         style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.7)), url('/images/bg.jpg')" }}
       ></div>
       
-      <div className="relative bg-white pt-12 pb-10 px-10 rounded-[40px] w-[90%] max-w-[450px] shadow-2xl">
+      <div className="relative bg-white pt-12 pb-10 px-10 rounded-lg w-[90%] max-w-[450px] shadow-2xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-green-600 mb-2">{t('register_title')}</h1>
           <p className="text-gray-500 font-light text-sm">{t('register_subtitle')}</p>
@@ -84,7 +84,7 @@ export default function RegisterPage() {
         
         {/* Status Message Display */}
         {status.message && (
-          <div className={`mb-6 p-3 text-sm rounded-xl font-medium border ${status.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-500 border-red-100'}`}>
+          <div className={`mb-6 p-3 text-sm rounded-lg font-medium border ${status.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-500 border-red-100'}`}>
             {status.message}
           </div>
         )}
@@ -95,7 +95,7 @@ export default function RegisterPage() {
             name="full_name"
             value={formData.full_name}
             onChange={handleChange}
-            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
+            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-sm" 
             placeholder={t('fullname')} 
             required 
           />
@@ -104,7 +104,7 @@ export default function RegisterPage() {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
+            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-sm" 
             placeholder={t('username')} 
             required 
           />
@@ -114,14 +114,15 @@ export default function RegisterPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm" 
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-sm" 
               placeholder={t('password')} 
               required 
             />
             <button
-              type ="button"
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -132,14 +133,15 @@ export default function RegisterPage() {
               name="confirm_password"
               value={formData.confirm_password}
               onChange={handleChange}
-              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 text-sm"
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-sm"
               placeholder={t('confirm_password')}
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
             >
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -147,7 +149,7 @@ export default function RegisterPage() {
           <button 
             type="submit" 
             disabled={isLoading}
-            className={`w-full text-white py-4 mt-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${isLoading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+            className={`w-full text-white py-4 mt-2 rounded-lg font-bold shadow-lg transition-all active:scale-95 ${isLoading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
           >
             {isLoading ? t('registering') : t('register_button')}
           </button>

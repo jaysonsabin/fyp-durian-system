@@ -305,17 +305,18 @@ export default function DashboardPage() {
                   value: farm.farm_id,
                   label: farm.farm_name
                 }))}
-                buttonClassName="appearance-none bg-green-50/80 hover:bg-green-100/80 text-green-700 font-extrabold text-[10px] uppercase tracking-wider pl-3 pr-8 py-1.5 rounded-xl border border-green-100 outline-none cursor-pointer transition-all duration-300 flex items-center justify-between gap-1"
+                buttonClassName="appearance-none bg-green-50/80 hover:bg-green-100/80 text-green-700 font-bold text-[11px] uppercase tracking-wider pl-3 pr-8 py-2 rounded-lg border border-green-100 outline-none cursor-pointer transition-all duration-300 flex items-center justify-between gap-1"
                 chevronSize={10}
                 containerClassName="inline-block"
-                menuClassName="absolute left-0 mt-1.5 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-[150] py-1 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200 thin-scrollbar"
+                menuClassName="absolute left-0 mt-1.5 w-48 bg-white border border-gray-100 rounded-lg shadow-lg z-[150] py-1 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200 thin-scrollbar"
               />
             </div>
           )}
         </div>
-        <button 
-          onClick={() => setIsProfilePanelOpen(true)} 
-          className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600 hover:border-green-100 transition-all duration-300"
+        <button
+          onClick={() => setIsProfilePanelOpen(true)}
+          aria-label={t('account')}
+          className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-50 hover:text-green-600 hover:border-green-100 transition-all duration-300 cursor-pointer"
         >
           <User size={18} />
         </button>

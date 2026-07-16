@@ -57,17 +57,17 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="w-8 h-8 border-4 border-green-500/20 border-t-green-600 rounded-full animate-spin"></div>
-        <p className="text-sm font-semibold text-gray-400 animate-pulse">{t('retrieving_records')}</p>
+        <p className="text-sm font-semibold text-gray-500 animate-pulse">{t('retrieving_records')}</p>
       </div>
     );
   }
 
   if (!logs || logs.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 px-6">
+      <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-200 px-6">
         <Calendar size={40} className="mx-auto text-gray-300 mb-3" />
         <p className="font-bold text-gray-700">{t('no_activities')}</p>
-        <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+        <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
           {t('no_activities_desc')}
         </p>
       </div>
@@ -131,20 +131,20 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
       
       {/* Dynamic Summary Dashboard Panel */}
       <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-        <span className="text-[12px] font-bold text-gray-400 uppercase tracking-wider block mb-3">
+        <span className="text-[12px] font-bold text-gray-600 uppercase tracking-wider block mb-3">
           {t('ops_summary')} ({currentMonthName} {currentYear})
         </span>
         <div className="grid grid-cols-3 gap-3">
           <div className="p-3 bg-gray-50/50 rounded-lg border border-gray-100 text-center">
-            <span className="text-[10px] font-bold text-gray-400 tracking-widest block mb-0.5">{t('fertilizer_applied')}</span>
+            <span className="text-[10px] font-bold text-gray-500 tracking-widest block mb-0.5">{t('fertilizer_applied')}</span>
             <span className="text-base font-bold text-green-800">{totalFertilizer.toFixed(1)} kg</span>
           </div>
           <div className="p-3 bg-gray-50/50 rounded-lg border border-gray-100 text-center">
-            <span className="text-[10px] font-bold text-gray-400 tracking-widest block mb-0.5">{t('watering_frequency')}</span>
+            <span className="text-[10px] font-bold text-gray-500 tracking-widest block mb-0.5">{t('watering_frequency')}</span>
             <span className="text-base font-bold text-green-800">{totalIrrigation}</span>
           </div>
           <div className="p-3 bg-gray-50/50 rounded-lg border border-gray-100 text-center">
-            <span className="text-[10px] font-bold text-gray-400 tracking-widest block mb-0.5">{t('pest_sprays')}</span>
+            <span className="text-[10px] font-bold text-gray-500 tracking-widest block mb-0.5">{t('pest_sprays')}</span>
             <span className="text-base font-bold text-green-800">{totalSpraying}</span>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
             className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap cursor-pointer ${
               activeFilter === opt.value
                 ? "bg-green-600 border-green-600 text-white shadow-sm shadow-green-600/10" 
-                : "bg-white border-gray-100 text-gray-400 hover:text-green-600 hover:bg-green-50/30"
+                : "bg-white border-gray-100 text-gray-500 hover:text-green-600 hover:bg-green-50/30"
             }`}
           >
             {opt.label}
@@ -172,7 +172,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
 
       {/* Accordion List Header */}
       <div className="flex justify-between items-center px-1">
-        <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">{t('activity_history_title')}</h3>
+        <h3 className="text-[12px] font-bold text-gray-600 uppercase tracking-wider">{t('activity_history_title')}</h3>
         <span className="text-[10px] bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider font-mono">
           {filteredLogs.length} {filteredLogs.length === 1 ? t('record') : t('records_label')}
         </span>
@@ -195,7 +195,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                 className="w-full flex items-center justify-between p-3 bg-white hover:bg-zinc-100/90 border border-gray-100 rounded-lg shadow-xs transition-colors text-xs font-bold text-gray-700 cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  {isMonthOpen ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-400" />}
+                  {isMonthOpen ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
                   <span className="text-green-800">{monthKey}</span>
                 </div>
                 <span className="text-[10px] bg-gray-200/80 text-gray-600 px-2 py-0.5 rounded-full font-bold font-mono">
@@ -223,23 +223,23 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                           className="p-4 flex items-center justify-between cursor-pointer"
                         >
                           <div className="flex-1 min-w-0 pr-4">
-                            <h4 className="font-extrabold text-green-600 text-xs truncate">
+                            <h4 className="font-bold text-green-600 text-xs truncate">
                               {log.activity_type === "Fertilization"
                                 ? `${t('fertilization')}: ${log.fertilizer_type === 'Organic' ? t('organic_fertilizer') : log.fertilizer_type}`
                                 : getActivityName(log.activity_type)}
                             </h4>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
                                 <Calendar size={10} className="text-gray-300" />
                                 {formatDate(log.log_date || log.createdAt)}
                               </span>
                               {isOffline && (
-                                <span className="text-[8px] bg-amber-50 text-amber-600 px-1 py-0.5 rounded font-black uppercase tracking-wider animate-pulse">
+                                <span className="text-[10px] bg-amber-50 text-amber-600 px-1 py-0.5 rounded font-black uppercase tracking-wider animate-pulse">
                                   {t('pending_sync')}
                                 </span>
                               )}
                               {!isOffline && logIdx === 0 && idx === 0 && (
-                                <span className="text-[9px] bg-green-50 text-green-700 px-1 py-0.5 rounded font-bold tracking-wider">
+                                <span className="text-[10px] bg-green-50 text-green-700 px-1 py-0.5 rounded font-bold tracking-wider">
                                   {t('latest')}
                                 </span>
                               )}
@@ -250,7 +250,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                             <span className="text-xs font-black text-green-800">
                               {log.activity_type === "Fertilization" ? `${log.fertilizer_amount} kg` : ""}
                             </span>
-                            {isExpanded ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+                            {isExpanded ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
                           </div>
                         </div>
 
@@ -262,27 +262,27 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50/50 p-3 rounded-lg border border-gray-100 text-[10px]">
                               {log.activity_type === "Fertilization" && (
                                 <div>
-                                  <span className="text-gray-450 font-bold uppercase text-[9px] block tracking-wide">{t('amount_label')}</span>
+                                  <span className="text-gray-500 font-bold uppercase text-[10px] block tracking-wide">{t('amount_label')}</span>
                                   <span className="font-extrabold text-green-800 mt-0.5 block">{log.fertilizer_amount} kg</span>
                                 </div>
                               )}
                               <div>
-                                <span className="text-gray-450 font-bold uppercase text-[9px] block tracking-wide">{t('soil_ph')}</span>
+                                <span className="text-gray-500 font-bold uppercase text-[10px] block tracking-wide">{t('soil_ph')}</span>
                                 <span className="font-extrabold text-green-800 mt-0.5 block">{log.soil_ph}</span>
                               </div>
                               <div>
-                                <span className="text-gray-450 font-bold uppercase text-[9px] block tracking-wide">{t('temp_label')}</span>
+                                <span className="text-gray-500 font-bold uppercase text-[10px] block tracking-wide">{t('temp_label')}</span>
                                 <span className="font-extrabold text-green-800 mt-0.5 block">{log.temperature} °C</span>
                               </div>
                               <div>
-                                <span className="text-gray-450 font-bold uppercase text-[9px] block tracking-wide">{t('rainfall_label')}</span>
+                                <span className="text-gray-500 font-bold uppercase text-[10px] block tracking-wide">{t('rainfall_label')}</span>
                                 <span className="font-extrabold text-green-800 mt-0.5 block">{log.rainfall} mm</span>
                               </div>
                             </div>
 
                             {/* Pest spraying details */}
                             {log.pest_control && log.pest_control !== "None" && (
-                              <div className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200 text-[9px] font-bold uppercase tracking-wider">
+                              <div className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200 text-[10px] font-bold uppercase tracking-wider">
                                 <span className="w-1.5 h-1.5 bg-gray-500 rounded-full"></span>
                                 {t('pest_control_label')}: {log.pest_control === "Fungicide (Canker)" ? t('fungicide') : (log.pest_control === "Insecticide (Borers)" ? t('insecticide') : (log.pest_control === "Organic (Neem)" ? t('organic_neem') : log.pest_control))}
                               </div>
@@ -303,7 +303,7 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                                   if (!isOffline && onEditLog) onEditLog(log);
                                 }}
                                 disabled={isOffline}
-                                className={`px-2 py-1 text-[9px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer ${
+                                className={`px-2.5 py-1.5 text-[10px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer ${
                                   isOffline
                                     ? "text-gray-300 bg-transparent"
                                     : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
@@ -319,10 +319,10 @@ export default function ActivityHistory({ logs, isLoading, onEditLog, onDeleteLo
                                   if (!isOffline && onDeleteLog) onDeleteLog(log.log_id);
                                 }}
                                 disabled={isOffline}
-                                className={`px-2 py-1 text-[9px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer ${
+                                className={`px-2.5 py-1.5 text-[10px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer ${
                                   isOffline
                                     ? "text-gray-300 bg-transparent"
-                                    : "text-gray-600 hover:text-red-650 hover:bg-red-50"
+                                    : "text-gray-600 hover:text-red-600 hover:bg-red-50"
                                 }`}
                                 title={isOffline ? t('cannot_delete_offline') : t('delete_activity')}
                               >

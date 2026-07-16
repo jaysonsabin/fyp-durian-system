@@ -357,8 +357,8 @@ export default function Library() {
       <div className="flex items-center justify-between h-14 relative">
         {!isSearchOpen ? (
           <div className="animate-in fade-in duration-200">
-            <h3 className="text-xl font-extrabold text-gray-800">{t('elibrary_title')}</h3>
-            <p className="text-xs text-gray-500">{t('elibrary_subtitle')}</p>
+            <h3 className="text-[12px] font-bold text-gray-600 uppercase tracking-wider">{t('elibrary_title')}</h3>
+            <p className="text-xs text-gray-500 mt-1">{t('elibrary_subtitle')}</p>
           </div>
         ) : (
           <div className="flex-1 mr-2 animate-in slide-in-from-right-4 duration-200">
@@ -368,7 +368,7 @@ export default function Library() {
               placeholder={t('search_resources')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white px-4 py-2 text-sm text-gray-800 rounded-full border border-gray-200 shadow-sm outline-none focus:border-green-500 transition-all"
+              className="w-full bg-white px-4 py-2.5 text-sm text-gray-800 rounded-lg border border-gray-200 shadow-sm outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-600 transition-all"
             />
           </div>
         )}
@@ -378,7 +378,7 @@ export default function Library() {
           {isAdmin && !isSearchOpen && (
             <button
               onClick={handleOpenUpload}
-              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
+              className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
             >
               <Plus size={14} />
               <span>{t('upload')}</span>
@@ -391,10 +391,11 @@ export default function Library() {
               setIsSearchOpen(!isSearchOpen);
               if (isSearchOpen) setSearchTerm(""); // Clear search when closing
             }}
-            className={`w-10 h-10 rounded-full shadow-sm flex items-center justify-center flex-shrink-0 transition-all ${
-              isSearchOpen 
-                ? "bg-gray-100 text-gray-500 hover:bg-gray-200" 
-                : "bg-white text-gray-400 hover:text-green-600"
+            aria-label={isSearchOpen ? t('close') : t('search_resources')}
+            className={`w-10 h-10 rounded-full shadow-sm flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
+              isSearchOpen
+                ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                : "bg-white text-gray-500 hover:text-green-600"
             }`}
           >
             {isSearchOpen ? <X size={18} /> : <Search size={20} />}
@@ -409,10 +410,10 @@ export default function Library() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-full border transition-all whitespace-nowrap shadow-sm ${
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap cursor-pointer ${
                 selectedCategory === category
-                  ? "bg-green-600 border-green-600 text-white"
-                  : "bg-white border-gray-100 text-gray-500 hover:bg-gray-50"
+                  ? "bg-green-600 border-green-600 text-white shadow-sm shadow-green-600/10"
+                  : "bg-white border-gray-100 text-gray-500 hover:text-green-600 hover:bg-green-50/30"
               }`}
             >
               {translateCategory(category)}
@@ -424,7 +425,7 @@ export default function Library() {
       {/* Resources Content Feed */}
       <div className="space-y-4 pb-20">
         {isLoading ? (
-          <div className="text-center text-gray-400 py-10 font-bold animate-pulse">
+          <div className="text-center text-gray-500 py-10 font-bold animate-pulse">
             {t('loading_resources')}
           </div>
         ) : filteredContents.length === 0 ? (
@@ -450,17 +451,18 @@ export default function Library() {
       {/* Upload/Edit Modal */}
       {(showUploadModal || editingResource) && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[32px] w-full max-w-lg p-6 shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-lg w-full max-w-lg p-6 shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-extrabold text-lg text-gray-800">
+              <h3 className="font-bold text-lg text-gray-800">
                 {showUploadModal ? t('upload_resource') : t('edit_resource')}
               </h3>
-              <button 
+              <button
                 onClick={() => {
                   setShowUploadModal(false);
                   setEditingResource(null);
                 }}
-                className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
+                aria-label={t('close')}
+                className="w-9 h-9 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -468,72 +470,72 @@ export default function Library() {
             
             <form onSubmit={showUploadModal ? handleUploadSubmit : handleEditSubmit} className="space-y-4 overflow-y-auto pr-1">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('discussion_title') || "Title"}</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">{t('discussion_title') || "Title"}</label>
                 <input
                   type="text"
                   placeholder={t('title_placeholder')}
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   required
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('type_label')}</label>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">{t('type_label')}</label>
                   <CustomSelect 
                     name="form_type"
                     value={formType}
                     onChange={(e) => setFormType(e.target.value)}
                     options={translatedResourceTypeOptions}
-                    buttonClassName="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white cursor-pointer flex items-center justify-between text-left"
+                    buttonClassName="w-full bg-gray-50 border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white cursor-pointer flex items-center justify-between text-left"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('category_label')}</label>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">{t('category_label')}</label>
                   <input
                     type="text"
                     placeholder="e.g. Soil, Fertilizer..."
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
                     required
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('description_label')}</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">{t('description_label')}</label>
                 <textarea 
                   placeholder={t('description_label') + "..."}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   rows="3"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all resize-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all resize-none"
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('media_url_label')}</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">{t('media_url_label')}</label>
                 <input
                   type="url"
                   placeholder="https://..."
                   value={formMediaUrl}
                   onChange={(e) => setFormMediaUrl(e.target.value)}
                   required
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-xs text-gray-600 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('publisher_label')}</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 ml-1">{t('publisher_label')}</label>
                 <input
                   type="text"
                   placeholder="e.g. MARDI, Department of Agriculture..."
                   value={formPublishedBy}
                   onChange={(e) => setFormPublishedBy(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
                 />
               </div>
 
@@ -544,13 +546,13 @@ export default function Library() {
                     setShowUploadModal(false);
                     setEditingResource(null);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button 
                   type="submit" 
-                  className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-5 py-2.5 text-xs font-bold shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
+                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-5 py-2.5 text-xs font-bold shadow-md shadow-green-600/10 active:scale-95 transition-all cursor-pointer"
                 >
                   {showUploadModal ? t('upload_resource_btn') : t('save_changes')}
                 </button>
@@ -566,7 +568,7 @@ export default function Library() {
 function EmptyState({ isFiltering }) {
   const { t } = useLanguage();
   return (
-    <div className="text-center text-gray-400 py-12 bg-white rounded-3xl border border-dashed border-gray-200 px-4">
+    <div className="text-center text-gray-500 py-12 bg-white rounded-lg border border-dashed border-gray-200 px-4">
       <BookOpen size={48} className="mx-auto mb-3 text-gray-300" />
       <p className="font-bold text-gray-700">
         {isFiltering ? t('no_matching_results') : t('no_resources_available')}
@@ -611,12 +613,12 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
 
   return (
     <div
-      className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex gap-4 transition-all hover:shadow-md cursor-pointer"
+      className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex gap-4 transition-all hover:shadow-md cursor-pointer"
       onClick={() => onClick(item)}
     >
       {/* Dynamic Type Icon Container */}
       <div
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+        className={`w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 ${
           isVideo ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"
         }`}
       >
@@ -626,11 +628,11 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
       {/* Item Meta & Details */}
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
-          <span className="text-[10px] font-extrabold text-green-600 uppercase tracking-wider truncate">
+          <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider truncate">
             {translateCategory(item.category || "General")}
           </span>
 
-          <span className="text-[10px] text-gray-400 flex-shrink-0">
+          <span className="text-[10px] text-gray-500 flex-shrink-0">
             {renderDate(item.date_published)}
           </span>
         </div>
@@ -647,7 +649,7 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50 flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-md max-w-[120px] truncate">
+            <span className="text-[10px] font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded-md max-w-[120px] truncate">
               {t('by_label')} {item.published_by || "System"}
             </span>
 
@@ -660,10 +662,11 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
             {/* Like button */}
             <button
               onClick={onLike}
-              className={`flex items-center gap-1 p-1.5 rounded-lg transition-all transform active:scale-95 ${
+              aria-label="Like"
+              className={`flex items-center gap-1 p-2 rounded-lg transition-all transform active:scale-95 cursor-pointer ${
                 isLiked 
                   ? "text-red-500 bg-red-50" 
-                  : "text-gray-400 hover:text-red-500 hover:bg-red-50"
+                  : "text-gray-500 hover:text-red-500 hover:bg-red-50"
               }`}
             >
               <Heart size={16} className={isLiked ? "fill-red-500 text-red-500" : ""} />
@@ -673,10 +676,11 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
             {/* Bookmark button */}
             <button
               onClick={onBookmark}
-              className={`flex items-center p-1.5 rounded-lg transition-all transform active:scale-95 ${
+              aria-label="Bookmark"
+              className={`flex items-center p-2 rounded-lg transition-all transform active:scale-95 cursor-pointer ${
                 isBookmarked 
                   ? "text-green-600 bg-green-50" 
-                  : "text-gray-400 hover:text-green-600 hover:bg-green-50"
+                  : "text-gray-500 hover:text-green-600 hover:bg-green-50"
               }`}
             >
               <Bookmark size={16} className={isBookmarked ? "fill-green-600 text-green-600" : ""} />
@@ -685,7 +689,8 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
             {/* Download button */}
             <button
               onClick={onDownload}
-              className="flex items-center gap-1 p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all transform active:scale-95"
+              aria-label="Download"
+              className="flex items-center gap-1 p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all transform active:scale-95 cursor-pointer"
             >
               <Download size={16} />
               <span className="text-xs font-bold">{downloads.length}</span>
@@ -701,6 +706,7 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
             <button
               onClick={(e) => onEdit(item, e)}
               className="p-2 bg-gray-50 text-blue-500 border border-blue-100 hover:bg-blue-50 rounded-full transition-colors cursor-pointer"
+              aria-label="Edit Resource"
               title="Edit Resource"
             >
               <Edit2 size={14} />
@@ -708,6 +714,7 @@ function LibraryCard({ item, userId, onLike, onBookmark, onDownload, onClick, is
             <button
               onClick={(e) => onDelete(item.content_id, e)}
               className="p-2 bg-gray-50 text-red-500 border border-red-100 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+              aria-label="Delete Resource"
               title="Delete Resource"
             >
               <Trash2 size={14} />

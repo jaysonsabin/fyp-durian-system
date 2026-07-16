@@ -25,9 +25,10 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
         {/* Panel Header */}
         <div className="p-6 flex justify-between items-center border-b border-gray-100">
           <h3 className="font-bold text-lg text-gray-800">{t('account')}</h3>
-          <button 
-            onClick={onClose} 
-            className="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition-colors"
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-gray-500 hover:text-gray-600 bg-gray-100 p-2.5 rounded-full transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -40,10 +41,10 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
               onClose();
               router.push('/profile');
             }}
-            className="flex items-center justify-between w-full p-2 rounded-2xl hover:bg-gray-50 text-left transition-colors group"
+            className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-50 text-left transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-green-50 text-green-600 p-1.5 rounded-xl group-hover:bg-green-100 transition-colors">
+              <div className="bg-green-50 text-green-600 p-1.5 rounded-lg group-hover:bg-green-100 transition-colors">
                 <Settings size={16} />
               </div>
               <span className="text-xs font-semibold text-gray-700">{t('edit_profile_farms')}</span>
@@ -53,11 +54,11 @@ export default function ProfilePanel({ isOpen, onClose, onLogout }) {
 
           {/* Language Selector Block */}
           <div className="border-t border-gray-100 pt-4 px-4 space-y-3">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Globe size={14} className="text-gray-400" />
               <span>{t('language')}</span>
             </span>
-            <div className="flex items-center bg-gray-100 p-1 rounded-xl">
+            <div className="flex items-center bg-gray-100 p-1 rounded-lg">
               <button
                 onClick={() => changeLanguage('ms')}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
